@@ -1,663 +1,582 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Omstilling – Tidsstempling</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Plus Pack – Produktionsstop</title>
 <style>
-  :root{
-    --bg:#0b1222; --bg2:#0f172a; --fg:#eef2ff; --muted:#a5b4fc;
-    --card:#0f172a; --card2:#0b1020; --accent:#60a5fa; --accent-2:#22d3ee;
-    --danger:#ef4444; --warn:#f59e0b; --success:#22c55e; --border:#1f2937;
-    --chip:#0b132a; --input:#0b1222; --textmuted:#cbd5e1;
-    --step1:#0ea5e9; --step2:#22c55e; --step3:#f59e0b; --step4:#a78bfa; --step5:#38bdf8; --step6:#f97316;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2) 35% 65%,var(--bg));color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  .wrap{max-width:1200px;margin:28px auto;padding:0 18px}
-  .app{background:linear-gradient(180deg,rgba(17,24,39,.85),rgba(11,18,34,.9));border:1px solid var(--border);border-radius:22px;box-shadow:0 12px 40px rgba(0,0,0,.45);overflow:hidden}
+:root{
+  --brand:#0b5fa4;      /* Plus Pack blå */
+  --bg:#f7f9fc;
+  --panel:#ffffff;
+  --muted:#64748b;
+  --text:#0f172a;
+  --ok:#16a34a;
+  --danger:#dc2626;
+  --divider:#e5e7eb;
+  --accent:#3b82f6;     /* markeringsfarve for Årsag */
+  --accent2:#10b981;    /* markeringsfarve for Uddybning */
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+.brand{background:var(--brand);color:#fff;padding:10px 16px;font-weight:700}
+.tabs{display:flex;gap:6px;background:#fff;border-bottom:1px solid var(--divider);padding:6px 8px;align-items:center}
+.tab{border:0;background:transparent;padding:10px 14px;border-radius:8px 8px 0 0;cursor:pointer;font-weight:700}
+.tab.active{background:#fff;box-shadow:0 -1px 0 0 var(--divider),0 2px 0 #fff inset}
+.status{margin-left:auto;display:inline-flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--divider);padding:6px 10px;border-radius:999px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.container{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--panel);border:1px solid var(--divider);border-radius:12px;padding:14px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 160px;gap:10px}
+.field{display:grid;gap:6px}
+label{font-size:12px;color:var(--muted)}
+input,select,textarea{border:1px solid var(--divider);border-radius:8px;padding:8px 10px}
+textarea{min-height:80px}
+.btn{border:1px solid var(--divider);background:#fff;padding:12px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-stop{color:#991b1b;border-color:#f2aaaa}
+.btn-start{color:#065f46;border-color:#a6e3b9}
+.muted{color:var(--muted)}
+.pill{padding:2px 8px;border:1px solid #d8e0eb;border-radius:999px;background:#fff;font-size:12px}
+.right{text-align:right}
 
-  /* Header */
-  header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(2,6,23,.9),rgba(2,6,23,.6));backdrop-filter:blur(6px);display:flex;gap:16px;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
-  .head-left{display:flex;align-items:center;gap:14px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand-name{
-    font-weight:900;letter-spacing:.6px;font-size:18px;line-height:1.1;
-    background:linear-gradient(90deg,#fff 0%, #a5b4fc 100%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  .brand small{display:block;font-weight:600;letter-spacing:.2px;color:#cbd5e1;opacity:.8}
+/* ====== Modal ====== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:1000}
+.overlay.open{display:flex}
+.modal{background:#fff;border:1px solid var(--divider);border-radius:14px;max-width:920px;width:96vw;box-shadow:0 30px 80px rgba(0,0,0,.25)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--divider)}
+.modal-b{padding:12px 14px}
+.modal-f{padding:12px 14px;border-top:1px solid var(--divider);display:flex;gap:8px;justify-content:flex-end;align-items:center}
 
-  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--chip);color:var(--fg);font-size:12px}
-  .dot{width:10px;height:10px;border-radius:999px;background:#64748b}
+/* ====== Chips (ny, mere intuitiv) ====== */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:10px;border:1px solid #d8e0eb;background:#f2f6fb;padding:10px 12px;border-radius:999px;font-size:13px;cursor:pointer;transition:transform .04s ease, box-shadow .15s ease, border-color .15s ease, background-color .15s ease}
+.chip input{width:16px;height:16px}
+.chip .txt{white-space:nowrap}
+.chip .badge{font-size:11px;border:1px solid #d8e0eb;background:#fff;border-radius:999px;padding:2px 6px}
+.chip:hover{box-shadow:0 1px 0 rgba(0,0,0,.02),0 2px 10px rgba(0,0,0,.06)}
+.chip:active{transform:scale(.99)}
 
-  .subnav{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--card2);border-bottom:1px solid var(--border)}
-  .subbtn{border:1px solid var(--border);background:#0b1222;color:#cbd5e1;border-radius:999px;padding:8px 12px;cursor:pointer}
-  .subbtn.active{outline:2px solid var(--accent);color:#fff}
+/* Valgt ÅRSAG -> brand/blå */
+.chip-radio.selected{background:#e8f1ff;border-color:var(--accent)}
+.chip-radio.selected .txt{color:#0b3d91;font-weight:700}
+.chip-radio input:focus{outline:2px solid var(--accent)}
 
-  .tabs{display:flex;gap:10px;align-items:center;padding:12px;background:var(--card2);border-bottom:1px solid var(--border);overflow:auto;z-index:25;position:relative}
-  .tab{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:220px;max-width:300px;padding:10px 14px;border:1px solid #20314c;border-radius:16px;background:#0f1a33;color:#eaf2ff;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)}
-  .tab .row{display:flex;gap:8px;align-items:center}
-  .tab .title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tab .meta{font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tab .state{font-size:11px;opacity:.95}
-  .tab .badgeAct{display:none;font-size:11px;padding:2px 6px;border-radius:999px;background:rgba(255,255,255,.15)}
-  .tab.sent{opacity:.9}
-  .tab[aria-selected="true"]{
-    background:linear-gradient(180deg,var(--accent),var(--accent-2));
-    color:#081019;border-color:transparent;box-shadow:0 10px 24px rgba(0,0,0,.35), inset 0 0 0 2px rgba(255,255,255,.25)
-  }
-  .tab[aria-selected="true"] .badgeAct{display:inline-block}
-  .tab .close{margin-left:auto;padding:0 .35rem;border:1px solid #3a4a68;border-radius:10px;background:#081325;color:#cbd5e1;cursor:pointer}
-  .tab[aria-selected="true"] .close{background:rgba(0,0,0,.1);color:#081019;border-color:rgba(0,0,0,.15)}
-  .tab-add,.tab-more{background:#0a1226;border:1px dashed var(--border);color:#cbd5e1;border-radius:14px;padding:10px 12px;cursor:pointer;white-space:nowrap}
-  .tab,.tab-add,.tab-more{user-select:none}
+/* Valgt UDDYBNING -> grøn */
+.chip-check.selected{background:#ecfdf5;border-color:var(--accent2)}
+.chip-check.selected .txt{color:#065f46;font-weight:700}
+.chip-check input:focus{outline:2px solid var(--accent2)}
 
-  .toolbar{display:flex;gap:10px;align-items:center;padding:10px 18px;background:var(--card2);border-bottom:1px solid var(--border)}
-  .btn{appearance:none;border:none;border-radius:14px;padding:12px 14px;cursor:pointer;font-weight:800;letter-spacing:.2px;display:inline-flex;align-items:center;gap:6px}
-  .btn.secondary{background:#111827;color:#cbd5e1;border:1px solid var(--border)}
-  .btn.ghost{background:transparent;color:#cbd5e1;border:1px dashed var(--border)}
-  .btn.warn{background:var(--warn);color:#111}
-  .btn.success{background:var(--success);color:#07140f}
-  .btn.accent{background:var(--accent);color:#081019}
-  .btn.print{background:#38bdf8;color:#081019}
+.scroll{max-height:180px;overflow:auto;border:1px dashed #d8e0eb;background:#fff;padding:10px;border-radius:12px}
+.reason-title{font-size:12px;color:var(--muted);margin:8px 0 6px}
 
-  .progress{flex:1;height:10px;border-radius:999px;background:#0a1226;position:relative;overflow:hidden;border:1px solid var(--border)}
-  .progress>span{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .25s ease}
-  .progressLabel{min-width:120px;text-align:right;font-size:12px;color:#c7d2fe}
+/* Små grafer */
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-label{min-width:120px;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{flex:1;background:#eef2f7;border:1px solid #d8e0eb;height:12px;border-radius:999px;overflow:hidden}
+.bar>div{height:100%;background:var(--brand);width:0%}
+.bar-val{min-width:80px;text-align:right;font-variant-numeric:tabular-nums}
 
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;padding:18px}
-  .col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
-  @media(max-width:1024px){.col-4,.col-6,.col-8{grid-column:span 12}}
-
-  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px}
-  .card h3{margin:0 0 10px;font-size:16px;color:#e2e8f0;display:flex;align-items:center;gap:10px}
-  .badge{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 ui-sans-serif;padding:6px 10px;border-radius:999px;background:#0b1222;border:1px solid var(--border)}
-  .badge .dot{width:8px;height:8px}
-  .pill{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#0a1226;font-size:12px}
-
-  label{display:block;font-size:13px;color:var(--textmuted);margin:8px 0 6px}
-  input,select,textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--input);color:var(--fg);outline:none}
-  input::placeholder, textarea::placeholder{color:var(--textmuted)}
-
-  .tasks{display:grid;gap:8px}
-  .task{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#0b1222,#0c1426)}
-  .task input[type="checkbox"]{width:22px;height:22px}
-  .task .txt{flex:1}
-  .task .ts{font:12px ui-monospace,monospace;color:#93c5fd;margin-left:auto}
-  .task.done{opacity:.55}
-
-  .readouts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-  @media(max-width:1200px){.readouts{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:640px){.readouts{grid-template-columns:1fr}}
-  .read{font:800 20px/1 ui-monospace,monospace}
-  .note{font-size:12px;color:#9ca3af}
-
-  .footer{position:sticky;bottom:0;z-index:15;background:linear-gradient(180deg,rgba(2,6,23,.6),rgba(2,6,23,.9));backdrop-filter:blur(6px);display:flex;gap:10px;justify-content:flex-end;margin-top:8px;padding:12px 18px;border-top:1px solid var(--border)}
-
-  table{width:100%;border-collapse:separate;border-spacing:0}
-  th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
-  th{font-size:12px;color:#cbd5e1}
-  .miniBar{height:10px;background:#0a1226;border:1px solid var(--border);border-radius:999px;overflow:hidden}
-  .miniBar>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0}
-
-  body[data-theme='light']{
-    --bg:#f3f4f6; --bg2:#ffffff; --fg:#0b1222; --textmuted:#0b1222;
-    --card:#ffffff; --card2:#f8fafc; --accent:#2563eb; --accent-2:#06b6d4; --danger:#b91c1c; --warn:#d97706; --success:#16a34a; --border:#e5e7eb; --chip:#eef2ff; --input:#ffffff;
-  }
-  body[data-theme='light'] .app{background:#ffffff;border-color:#e5e7eb;box-shadow:0 4px 24px rgba(0,0,0,.08)}
-  body[data-theme='light'] header, body[data-theme='light'] .footer{background:#ffffff;border-color:#e5e7eb}
-  body[data-theme='light'] .toolbar,.subnav,.tabs{background:#f8fafc}
-  body[data-theme='light'] .task{background:#ffffff;border-color:#e5e7eb}
-  body[data-theme='light'] .task .ts{color:#111827;font-weight:600;background:#eef2ff;padding:2px 6px;border-radius:6px}
-  body[data-theme='light'] .btn.secondary{background:#ffffff;color:#0b1222;border:1px solid #cbd5e1}
-  body[data-theme='light'] .chip{background:#f1f5f9;color:#0b1222;border-color:#cbd5e1}
-  body[data-theme='light'] .badge{background:#eef2ff;color:#0b1222;border-color:#cbd5e1}
-  body[data-theme='light'] .pill{background:#eef2ff;color:#0b1222;border-color:#cbd5e1}
-  body[data-theme='light'] .progress{background:#e5e7eb;border-color:#e5e7eb}
-  body[data-theme='light'] .brand-name{background:linear-gradient(90deg,#0b1222 0%, #475569 100%);-webkit-background-clip:text;background-clip:text}
-
-  body:not([data-theme='light']) .tabs,
-  body:not([data-theme='light']) .subnav,
-  body:not([data-theme='light']) .toolbar{ background-color:var(--card2) !important; }
-
-  @media print{
-    body{background:#fff!important;color:#000}
-    .wrap{max-width:100%;margin:0;padding:0}
-    header,.toolbar,.footer,#feedback,.tabs,.subnav,#templateModal{display:none!important}
-    .app{box-shadow:none;border:none}
-    .card{background:#fff;border:1px solid #000}
-    .task{background:#fff;border-color:#000}
-    .pill{border-color:#000}
-  }
-
-  .btn[data-icon="start"]::before{content:"⏱️";margin-right:8px}
-  .btn[data-icon="run"]::before{content:"✅";margin-right:8px}
-  .btn[data-icon="submit"]::before{content:"📤";margin-right:8px}
-  .btn[data-icon="save"]::before{content:"💾";margin-right:8px}
-  .btn[data-icon="clear"]::before{content:"🧹";margin-right:8px}
-
-  #templateModal[hidden]{display:none}
-  #templateModal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50}
-  .modalCard{width:min(520px,95vw);background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px}
-  .tmplRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-  .tmplBtn{flex:1 1 220px;border:1px solid var(--border);background:#0a1226;color:#eaf2ff;padding:12px;border-radius:12px;cursor:pointer;text-align:left}
-  .tmplBtn:hover{outline:2px solid var(--accent)}
+/* Søgefelt */
+.search{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.search input{flex:1}
+.search .pill{background:#f8fafc}
 </style>
-
-<script>
-  /* Sæt jeres Power Automate HTTP-endpoint her */
-  window.OMSTILLING_ENDPOINT = "https://prod-71.westeurope.logic.azure.com:443/workflows/3b731a0f1bf64720ac52b562d93321b7/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=x9RHoO0On3r50nepjlUfBH-CGaVXDN6tlD1Ur_m-Q0E";
-</script>
 </head>
 <body>
-<div class="wrap">
-  <div class="app" role="application" aria-label="Omstilling – tidsstempling">
-    <header>
-      <div class="head-left">
-        <div class="brand">
-          <div class="brand-name">Plus&nbsp;Pack<small>Omstilling – Tidsstempling</small></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button type="button" id="themeToggle" class="btn secondary">☀️ Lys</button>
-        <button type="button" id="printBtn" class="btn print">🖨️ Print</button>
-        <span class="chip"><span class="dot" id="statusDot"></span><span id="statusText">Klar</span></span>
-      </div>
-    </header>
+  <div class="brand">Plus Pack – Produktionsstop</div>
 
-    <div class="subnav">
-      <button id="navMain" class="subbtn active">Tjekliste</button>
-      <button id="navHist" class="subbtn">Historik</button>
-    </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-reg">Registrering</button>
+    <button class="tab" id="tab-hist">Historik</button>
+    <button class="tab" id="tab-share">Deling</button>
+    <button class="tab" id="tab-settings">Indstillinger</button>
+    <div class="status"><span class="dot" id="dot" style="background:var(--ok)"></span><span id="statxt">Kører</span></div>
+  </div>
 
-    <!-- Faner -->
-    <div class="tabs" id="tabs">
-      <div id="addTab" class="tab-add" role="button" tabindex="0">＋ Ny tjekliste</div>
-    </div>
-
-    <section id="view-main">
-      <div class="toolbar">
-        <button type="button" id="toggleDone" class="btn secondary">Vis kun åbne</button>
-        <div class="progress"><span id="progBar"></span></div>
-        <div class="progressLabel"><span id="progText">0 / 0 færdige</span></div>
-      </div>
-
-      <form id="form" class="grid" autocomplete="on">
-        <div class="card col-8">
-          <div class="grid" style="grid-template-columns:repeat(12,1fr);gap:10px">
-            <div style="grid-column:span 6">
-              <label for="operator">Omstiller <span style="color:#fca5a5">*</span></label>
-              <input id="operator" placeholder="Dit navn" required />
-            </div>
-            <div style="grid-column:span 6">
-              <label for="line">Linje <span style="color:#fca5a5">*</span></label>
-              <select id="line" required>
-                <option value="" disabled selected>Vælg…</option>
-                <option>77</option><option>76</option><option>75</option><option>74</option>
-                <option>73</option><option>72</option><option>71</option><option>70</option>
-                <option>65</option><option>64</option><option>63</option><option>62</option>
-                <option>61</option><option>60</option><option>55</option><option>54</option><option>50</option>
-              </select>
-            </div>
-
-            <div style="grid-column:span 6">
-              <label for="order">Ordrenr.</label>
-              <input id="order" placeholder="Fx 45001234" />
-            </div>
-            <div style="grid-column:span 6">
-              <label for="varenr">Vare nr.</label>
-              <input id="varenr" placeholder="Fx 123456" />
-            </div>
-
-            <div style="grid-column:span 6">
-              <label for="toolno">Værktøjsnr.</label>
-              <input id="toolno" placeholder="Fx VKT-1234" />
-            </div>
-
-            <div style="grid-column:span 12">
-              <label for="tmplSelect">Skabelon</label>
-              <select id="tmplSelect"></select>
+  <div class="container">
+    <!-- REG -->
+    <section id="view-reg">
+      <div class="card">
+        <div class="grid">
+          <div class="field">
+            <label>Handling</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <button class="btn btn-stop" id="btn-stop">STOP</button>
+              <button class="btn btn-start" id="btn-start" disabled>START</button>
             </div>
           </div>
         </div>
 
-        <div class="card col-4">
-          <h3><span class="badge"><span class="dot" style="background:var(--step2)"></span>Godkendelse</span></h3>
-          <label for="approver">Godkender</label>
-          <input id="approver" placeholder="Fx Teamleder" />
-          <label class="chip" style="margin-top:8px;display:inline-flex;gap:8px;align-items:center">
-            <input type="checkbox" id="approveCheck"> Jeg bekræfter at data er korrekte
-          </label>
+        <div class="grid3" style="margin-top:10px">
+          <div class="field">
+            <label>Linje / Maskine</label>
+            <select id="line">
+              <option value="">— Vælg maskine —</option>
+              <option>L10 75 t Rhodes special presse</option>
+              <option>L11 Mech RF135 serie nr 18-11 Mnr888</option>
+              <option disabled>L12 30 t Flexo C30 S15  INAKTIV</option>
+              <option>L13 Press Beutler PD 40</option>
+              <option>L14 50 t Flexo C50 S20 presse</option>
+              <option>L15 30 t Flexo C30 S15 presse</option>
+              <option>L16 40 t Schuler PNH 40/250 presse</option>
+              <option>L17 30 t Flexo C30 S15 presse</option>
+              <option>L20 50 t Bliss 50F MKII presse</option>
+              <option>L22 50 t Bliss 50F MKII presse</option>
+              <option>L23 45 t Bliss 21½ presse</option>
+              <option>L24 30 t Flexo C30 S15</option>
+              <option>L25 30 t Flexo C30 X presse</option>
+              <option>L26 L 36 30 t Flexo C30 S 15 presse</option>
+              <option>L27 45 t Bliss 21½ presse</option>
+              <option>L28 50 t Flexo presse</option>
+              <option>L29 30 t Flexo C30 presse</option>
+              <option>L30 ny presse 2012</option>
+              <option>L33 50 t Bliss 50F MKII presse</option>
+              <option>L34 50 t Bliss 50F MKII presse</option>
+              <option>L35 30 t Flexo C30 S15 presse</option>
+              <option>L36 30 t Flexo C30 S15 presse Picop</option>
+              <option>L40 50 t Flexo C50 S20 presse</option>
+              <option>L41 L37, 50 t Bliss 50F MKII presse</option>
+              <option>L42 Press Beutler PD 40 alu spez638</option>
+              <option>L43 Press Beutler PD 40 alu spez637</option>
+              <option>L80 Choko-kapsler</option>
+              <option>L81 Lys-manchetter</option>
+              <option>L82 Lys-manchetter</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Operatør (valgfri)</label>
+            <input id="operator" type="text" placeholder="Navn/initialer"/>
+          </div>
+          <div class="field"><label>&nbsp;</label><button class="btn" id="btn-clear-line" type="button">Ryd linje/navn</button></div>
         </div>
 
-        <!-- Trin-kort 1..6 (samme som før) -->
-        <div class="card col-12" data-stepcard="1">
-          <h3><span class="badge"><span class="dot" style="background:var(--step1)"></span><span class="stepTitle" data-st="1">Trin 1</span></h3>
-          <div class="tasks" id="tasks-1"></div>
-          <div class="pill" style="margin-top:10px">Starttid: <span id="t1Start">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn warn" data-stamp-btn="1" data-icon="start">Stempl START</button></div>
+        <div class="grid3" style="margin-top:8px">
+          <div class="field"><label>Ordre nr. (krævet)</label><input id="orderNo" type="text"/></div>
+          <div class="field"><label>Vare nr. (krævet)</label><input id="itemNo" type="text"/></div>
+          <div class="field"><label>&nbsp;</label><button class="btn" id="btn-clear-order" type="button">Ryd ordre</button></div>
         </div>
 
-        <div class="card col-12" data-stepcard="2">
-          <h3><span class="badge"><span class="dot" style="background:var(--step2)"></span><span class="stepTitle" data-st="2">Trin 2</span></h3>
-          <div class="tasks" id="tasks-2"></div>
-          <div class="pill" style="margin-top:10px">Starttid: <span id="t2Start">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn secondary" data-stamp-btn="2" data-icon="start">Stempl START</button></div>
-        </div>
+        <p class="muted" id="liveTimer">—</p>
+      </div>
 
-        <div class="card col-12" data-stepcard="3">
-          <h3><span class="badge"><span class="dot" style="background:var(--step3)"></span><span class="stepTitle" data-st="3">Trin 3</span></h3>
-          <div class="tasks" id="tasks-3"></div>
-          <div class="pill" style="margin-top:10px">Starttid: <span id="t3Start">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn secondary" data-stamp-btn="3" data-icon="start">Stempl START</button></div>
-        </div>
-
-        <div class="card col-12" data-stepcard="4">
-          <h3><span class="badge"><span class="dot" style="background:var(--step4)"></span><span class="stepTitle" data-st="4">Trin 4</span></h3>
-          <div class="tasks" id="tasks-4"></div>
-          <div class="pill" style="margin-top:10px">Starttid: <span id="t4Start">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn secondary" data-stamp-btn="4" data-icon="start">Stempl START</button></div>
-        </div>
-
-        <div class="card col-12" data-stepcard="5">
-          <h3><span class="badge"><span class="dot" style="background:var(--step5)"></span><span class="stepTitle" data-st="5">Trin 5</span></h3>
-          <div class="tasks" id="tasks-5"></div>
-          <div class="pill" style="margin-top:10px">Starttid: <span id="t5Start">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn secondary" data-stamp-btn="5" data-icon="start">Stempl START</button></div>
-        </div>
-
-        <div class="card col-12" data-stepcard="6">
-          <h3><span class="badge"><span class="dot" style="background:var(--step6)"></span><span class="stepTitle" data-st="6">Trin 6</span></h3>
-          <div class="tasks" id="tasks-6"></div>
-          <div class="pill" style="margin-top:10px">Start: <span id="t6Start">–</span> • I DRIFT: <span id="tInRun">–</span></div>
-          <div style="margin-top:10px"><button type="button" class="btn secondary" data-stamp-btn="6" data-icon="start">Stempl START</button> <button type="button" class="btn success" id="btnInRun" data-icon="run">Stempl I DRIFT</button></div>
-        </div>
-
-        <div class="card col-12" id="commentSection">
-          <h3>Generel kommentar</h3>
-          <textarea id="generalComment" placeholder="Evt. ekstra noter…"></textarea>
-        </div>
-
-        <div class="card col-12">
-          <h3><span class="badge"><span class="dot" style="background:var(--step5)"></span>Tidsoverblik</span></h3>
-          <div class="readouts">
-            <div><div class="note" id="lbl12">Trin 1 → 2</div><div class="read" id="r12">00:00:00</div></div>
-            <div><div class="note" id="lbl23">Trin 2 → 3</div><div class="read" id="r23">00:00:00</div></div>
-            <div><div class="note" id="lbl34">Trin 3 → 4</div><div class="read" id="r34">00:00:00</div></div>
-            <div><div class="note" id="lbl45">Trin 4 → 5</div><div class="read" id="r45">00:00:00</div></div>
-            <div><div class="note" id="lblTot">Start (Trin 1) → I DRIFT</div><div class="read" id="rTotal">00:00:00</div></div>
+      <div class="card" id="stats-card" style="margin-top:10px">
+        <h3 style="margin:0 0 8px">Stop-statistik</h3>
+        <div class="muted" style="margin-bottom:8px">Alle registreringer i denne browser.</div>
+        <div class="grid">
+          <div>
+            <h4 style="margin:0 0 6px">Hyppighed (antal pr. årsag)</h4>
+            <div id="freqBars" class="bars"></div>
+          </div>
+          <div>
+            <h4 style="margin:0 0 6px">Varighed (sum pr. årsag)</h4>
+            <div id="durBars" class="bars"></div>
           </div>
         </div>
-
-        <div class="footer col-12">
-          <button type="button" id="saveDraft" class="btn ghost" data-icon="save">Gem kladde</button>
-          <button type="button" id="clearBtn" class="btn secondary" data-icon="clear">Ryd</button>
-          <button type="submit" class="btn accent" data-icon="submit">Indsend</button>
-        </div>
-        <div id="feedback" class="col-12" aria-live="polite"></div>
-      </form>
+      </div>
     </section>
 
+    <!-- HIST -->
     <section id="view-hist" style="display:none">
-      <div class="card" style="margin:16px">
-        <h3>Igangværende tjeklister</h3>
-        <div id="histWrap" style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:12px">
+      <div class="card">
+        <div class="usage-wrap" style="margin-bottom:10px">
+          <strong>Poster:</strong><span id="countPosts">0</span>
+          <strong style="margin-left:12px">Plads:</strong><span id="usageTxt">0%</span>
+          <div class="usage"><div id="usageFill"></div></div>
+          <button class="btn" id="btn-archive">Arkivér & nulstil</button>
+        </div>
+        <div style="overflow:auto;max-height:60vh;border:1px solid var(--divider);border-radius:10px">
           <table>
             <thead><tr>
-              <th>Status</th><th>Trin nået</th><th>Fremskridt</th>
-              <th>Operatør</th><th>Linje</th><th>Ordre</th><th>Handling</th>
+              <th>Start</th><th>Slut</th><th>Varighed</th><th>Linje</th><th>Ordre</th><th>Vare</th><th>Kode</th><th>Uddybning</th><th>Kommentar</th><th>Operatør</th><th class="right">Handling</th>
             </tr></thead>
-            <tbody id="histBody"></tbody>
+            <tbody id="tbl-body"></tbody>
           </table>
         </div>
-        <p id="histEmpty" class="note" style="display:none;margin-top:10px">Ingen igangværende tjeklister.</p>
+      </div>
+    </section>
+
+    <!-- SHARE -->
+    <section id="view-share" style="display:none">
+      <div class="card">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btn-csv">Eksporter CSV</button>
+          <button class="btn" id="btn-json">Kopiér JSON</button>
+          <button class="btn" id="btn-email">Send til mail</button>
+          <button class="btn" id="btn-clear-log">Nulstil log</button>
+        </div>
+        <p class="muted">Data gemmes lokalt i browseren (localStorage).</p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" style="display:none">
+      <div class="card">
+        <div class="grid">
+          <div class="field"><label>Standard-modtager</label><input id="defTo" type="email" placeholder="M.masiewicz@pluspack.com"/></div>
+          <div class="field"><label>Brandfarve</label><input id="brandColor" type="text" placeholder="#0b5fa4"/></div>
+        </div>
+        <div style="margin-top:8px"><button class="btn" id="btn-save-settings">Gem indstillinger</button></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 8px">Årsager</h3>
+        <div class="grid">
+          <div class="field"><label>Kode (fx PRES)</label><input id="causeCode" type="text" placeholder="KODE"/></div>
+          <div class="field"><label>Navn/label</label><input id="causeLabel" type="text" placeholder="Beskrivelse"/></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Uddybning (chips, kommasepareret)</label><input id="causeChips" type="text" placeholder="fx Rensning, Sikkerhed, Opsætning"/></div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btn-add-cause">Tilføj årsag</button>
+          <button class="btn" id="btn-reset-causes">Nulstil til standard</button>
+        </div>
+        <div id="causeList" style="margin-top:8px"></div>
       </div>
     </section>
   </div>
-</div>
 
-<!-- Skabelonvælger -->
-<div id="templateModal" hidden>
-  <div class="modalCard">
-    <h3>Vælg skabelon</h3>
-    <div class="tmplRow" id="tmplBtns"></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:12px">
-      <button class="btn secondary" id="tmplCancel">Luk</button>
+  <!-- STOP MODAL -->
+  <div class="overlay" id="ov-stop">
+    <div class="modal">
+      <div class="modal-h"><strong>Registrér stop</strong><button class="btn" id="stop-close">Luk</button></div>
+      <div class="modal-b">
+        <div class="grid">
+          <div>
+            <div class="search">
+              <input id="reasonSearch" type="search" placeholder="Søg i årsager… (skriv for at filtrere)"/>
+              <span class="pill">Top 10 vises først</span>
+            </div>
+            <div id="reasonButtons">
+              <div class="chips" id="reasonTop"></div>
+              <div class="reason-title" id="reasonMoreLabel" style="display:none">Flere årsager</div>
+              <div class="chips scroll" id="reasonMore" style="display:none"></div>
+            </div>
+          </div>
+          <div>
+            <label>Uddybning</label>
+            <div class="chips" id="reasonChips"></div>
+          </div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Andet (uddybning)</label><input id="other" type="text"/></div>
+        <div class="field"><label>Kommentar</label><textarea id="comment"></textarea></div>
+        <p id="stopValidation" class="muted"></p>
+      </div>
+      <div class="modal-f">
+        <button class="btn" id="stop-cancel">Annuller</button>
+        <button class="btn btn-stop" id="stop-confirm">Bekræft stop</button>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- EDIT MODAL -->
+  <div class="overlay" id="ov-edit">
+    <div class="modal">
+      <div class="modal-h"><strong>Redigér</strong><button class="btn" id="edit-close">Luk</button></div>
+      <div class="modal-b">
+        <input type="hidden" id="edit-id"/>
+        <div class="grid"><div class="field"><label>Start</label><input id="edit-start" type="datetime-local"/></div><div class="field"><label>Slut</label><input id="edit-end" type="datetime-local"/></div></div>
+        <div class="grid"><div class="field"><label>Linje</label><select id="edit-line"></select></div><div class="field"><label>Operatør</label><input id="edit-operator" type="text"/></div></div>
+        <div class="grid"><div class="field"><label>Ordre</label><input id="edit-order" type="text"/></div><div class="field"><label>Vare</label><input id="edit-item" type="text"/></div></div>
+        <div class="grid"><div class="field"><label>Årsagskode</label><select id="edit-reason"></select></div><div class="field"><label>Uddybning</label><div class="chips" id="edit-chips"></div></div></div>
+        <div class="field"><label>Andet</label><input id="edit-other" type="text"/></div>
+        <div class="field"><label>Kommentar</label><textarea id="edit-comment"></textarea></div>
+      </div>
+      <div class="modal-f"><button class="btn" id="edit-cancel">Annuller</button> <button class="btn" id="edit-save">Gem</button></div>
+    </div>
+  </div>
+
+  <!-- EMAIL MODAL -->
+  <div class="overlay" id="ov-email">
+    <div class="modal">
+      <div class="modal-h"><strong>Send til e-mail</strong><button class="btn" id="email-close">Luk</button></div>
+      <div class="modal-b">
+        <div class="grid"><div class="field"><label>Til</label><input id="email-to" type="email"/></div><div class="field"><label>Cc</label><input id="email-cc" type="text"/></div></div>
+        <div class="grid"><div class="field"><label>Emne</label><input id="email-subj" type="text"/></div><div class="field"><label>Vedhæft</label><select id="email-attach"><option value="csv">CSV</option><option value="json">JSON</option></select></div></div>
+        <div class="field"><label>Besked</label><textarea id="email-body">Se vedhæftede produktionsstop-log.</textarea></div>
+      </div>
+      <div class="modal-f"><button class="btn" id="email-cancel">Annuller</button> <button class="btn" id="email-send">Send</button></div>
+    </div>
+  </div>
 
 <script>
-/* ---------- Skabeloner ---------- */
-const TEMPLATES={
-  "form_stanse_adskilt":{name:"Form- og stansesektioner adskilt",hideSteps:[],steps:{
-    1:{title:"Trin 1 – Forberedelse",tasks:["Log ind på omstilling","Tjek værktøjsloggen for tidligere hændelser relateret til værktøjet","Verificér værktøjsnummer stemmer med produktionsordre","Sæt maskine i værktøjsskift","Kør stansestation til højre","Tøm værktøj for vand og tøm kølevandsdunk","Afmonter køleslanger fra formværktøj"]},
-    2:{title:"Trin 2 – Form Station",tasks:["Afmontering: Løsn formværktøj, fjern ØVRE og NEDRE formstation","Opsætning: Monter ny formstation (ØVRE og NEDRE), luk og centrér værktøj korrekt","Køling: Tilslut køleslanger, fjern overskydende slanger og hæng dem op"]},
-    3:{title:"Trin 3 – Stanse Station",tasks:["Afmontering: Løsn stansværktøj og afmonter ØVRE og NEDRE del","Opsætning: Monter ny stansestation. Spænd overstans og understans","Sikr afstand mellem knive og bundform, justér ved indkøring"]},
-    4:{title:"Trin 4 – Stabel Station",tasks:["Afmontering: Løsn stabelstation","Afmonter stabelstation","Opsæt ny stabelstation","Spænd","Justér bufferbord"]},
-    5:{title:"Trin 5 – Indlæs & Justering",tasks:["Indsæt folie og tænd for opvarmningsfolie","Kontrollér at alle stationer er på plads","Indstil: varme i slæde, køleplade, afblæsning og skab","Indlæs program og justér spænding","Tænd for vand","Slå start-automatik fra","Tænd PP-folie og start"]},
-    6:{title:"Trin 6 – Indkøring",tasks:["Form og stans trinvist – lav prøvestans: Indstil startposition: 0,3–0,5 mm over skærehøjde (min. 0,5 mm ved nye knive)","Kør værktøj manuelt eller med jog-funktion","Lav prøvestans i folie efter hvert trin og inspicér emnet grundigt","Justér indtil resultatet er rent, uden grater eller flæk","Opsæt og kalibrér stabelsektion (udskubber og stabelskål/robot)","Få formandens godkendelse og frigiv til produktion"]}
-  }},
-  "bfs":{name:"BFS Værktøj",hideSteps:[3],steps:{
-    1:{title:"Trin 1 – Forberedelse",tasks:["Log ind på omstilling","Tjek værktøjsloggen for tidligere hændelser relateret til værktøjet","Verificér værktøjsnummer stemmer med produktionsordre","Sæt maskine i værktøjsskift","Kør stansestation til højre","Tøm værktøj for vand og tøm kølevandsdunk","Afmonter køleslanger fra formværktøj"]},
-    2:{title:"Trin 2 – Form Station",tasks:["Afmontering: Løsn formværktøj, fjern ØVRE og NEDRE formstation","Opsætning: Monter ny formstation (ØVRE og NEDRE), luk og centrér værktøj korrekt","Køling: Tilslut køleslanger, fjern overskydende slanger og hæng dem op"]},
-    3:{title:"Trin 3 – Stanse Station (ikke relevant for BFS)",tasks:[]},
-    4:{title:"Trin 4 – Stabel Station",tasks:["Afmontering: Løsn stabelstation","Afmonter stabelstation","Opsæt ny stabelstation","Spænd","Justér bufferbord"]},
-    5:{title:"Trin 5 – Indlæs & Justering",tasks:["Indsæt folie og tænd for opvarmningsfolie","Kontrollér at alle stationer er på plads","Indstil: varme i slæde, køleplade, afblæsning og skab","Indlæs program og justér spænding","Tænd for vand","Slå start-automatik fra","Tænd PP-folie og start"]},
-    6:{title:"Trin 6 – Indkøring",tasks:["Form og stans trinvist – lav prøvestans: Indstil startposition: 0,3–0,5 mm over skærehøjde (min. 0,5 mm ved nye knive)","Kør værktøj manuelt eller med jog-funktion","Lav prøvestans i folie efter hvert trin og inspicér emnet grundigt","Justér indtil resultatet er rent, uden grater eller flæk","Opsæt og kalibrér stabelsektion (udskubber og stabelskål/robot)","Få formandens godkendelse og frigiv til produktion"]}
-  }}
+/* ===== Polyfills ===== */
+if(!String.prototype.trim){String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g,'');};}
+if(!Array.prototype.indexOf){Array.prototype.indexOf=function(searchElement,fromIndex){var O=Object(this),len=O.length>>>0;if(len===0)return-1;var n=+fromIndex||0;if(n>=len)return-1;var k=(n>=0)?n:Math.max(len-Math.abs(n),0);for(;k<len;k++){if(k in O&&O[k]===searchElement)return k;}return-1;};}
+
+/* ===== Helpers ===== */
+function byId(id){return document.getElementById(id);}
+function addClass(el,c){if(!el)return;if(el.className.indexOf(c)===-1)el.className+=(el.className?' ':'')+c;}
+function remClass(el,c){if(!el)return;var a=el.className.split(' '),i=a.indexOf(c);if(i>-1){a.splice(i,1);el.className=a.join(' ');}}
+function show(el){if(el)el.style.display='';}
+function hide(el){if(el)el.style.display='none';}
+function openOv(id){addClass(byId(id),'open');}
+function closeOv(id){remClass(byId(id),'open');}
+function pad(n){return(n<10?'0':'')+n;}
+function fmtDate(d){var dt=(d instanceof Date)?d:new Date(d);try{return dt.toLocaleString('da-DK');}catch(e){return dt.toString();}}
+function fmtDur(ms){var s=Math.floor((ms||0)/1000),h=pad(Math.floor(s/3600)),m=pad(Math.floor((s%3600)/60)),ss=pad(s%60);return h+':'+m+':'+ss;}
+function uuid(){return 'id-'+(new Date().getTime())+'-'+Math.floor(Math.random()*1e6);}
+function bytesLen(str){return unescape(encodeURIComponent(str||'')).length;}
+
+/* ===== Storage ===== */
+var STORAGE='produktionsstop.events.v1';
+var SETTINGS='produktionsstop.settings.v1';
+var DEFAULT_REASONS=[
+  {code:'PRES', label:'Presse', chips:['Rensning','Smøring','Opsætning']},
+  {code:'VAERK',label:'Værktøj',chips:['Skift','Slid','Defekt']},
+  {code:'STAK' ,label:'Stakker', chips:['Fejl','Opsamler','Andet']},
+  {code:'FOLIE',label:'Manglende folie',chips:['Påfyld','Bestilling']},
+  {code:'ORDRE',label:'Manglende ordre',chips:['Afventer','Uklar ordre']},
+  {code:'ANDET',label:'Andet',chips:['Sikkerhed','Rengøring']}
+];
+function loadEvents(){try{return JSON.parse(localStorage.getItem(STORAGE))||[];}catch(e){return[];}}
+function saveEvents(x){localStorage.setItem(STORAGE,JSON.stringify(x));}
+function loadSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS))||{};}catch(e){return{};}}
+function saveSettings(x){localStorage.setItem(SETTINGS,JSON.stringify(x));}
+function getAllReasons(){var s=loadSettings(),custom=s.customCauses||[],map={},out=[],i;for(i=0;i<DEFAULT_REASONS.length;i++){map[DEFAULT_REASONS[i].code]=DEFAULT_REASONS[i];}for(i=0;i<custom.length;i++){map[custom[i].code]={code:custom[i].code,label:custom[i].label,chips:custom[i].chips||[]};}for(var k in map){if(map.hasOwnProperty(k))out.push(map[k]);}return out;}
+function getReasonByCode(code){var list=getAllReasons();for(var i=0;i<list.length;i++){if(list[i].code===code)return list[i];}return null;}
+
+/* ===== Elements ===== */
+var els={
+  tabReg:byId('tab-reg'), tabHist:byId('tab-hist'), tabShare:byId('tab-share'), tabSettings:byId('tab-settings'),
+  viewReg:byId('view-reg'), viewHist:byId('view-hist'), viewShare:byId('view-share'), viewSettings:byId('view-settings'),
+  dot:byId('dot'), statxt:byId('statxt'),
+  btnStop:byId('btn-stop'), btnStart:byId('btn-start'),
+  line:byId('line'), operator:byId('operator'), btnClearLine:byId('btn-clear-line'),
+  orderNo:byId('orderNo'), itemNo:byId('itemNo'), btnClearOrder:byId('btn-clear-order'),
+  liveTimer:byId('liveTimer'), tableBody:byId('tbl-body'),
+  countPosts:byId('countPosts'), usageTxt:byId('usageTxt'), usageFill:byId('usageFill'), btnArchive:byId('btn-archive'),
+  ovStop:byId('ov-stop'), stopClose:byId('stop-close'), stopCancel:byId('stop-cancel'), stopConfirm:byId('stop-confirm'),
+  reasonButtons:byId('reasonButtons'), reasonTop:byId('reasonTop'), reasonMore:byId('reasonMore'), reasonMoreLabel:byId('reasonMoreLabel'),
+  reasonChips:byId('reasonChips'), other:byId('other'), comment:byId('comment'), stopValidation:byId('stopValidation'), reasonSearch:byId('reasonSearch'),
+  ovEdit:byId('ov-edit'), editClose:byId('edit-close'), editCancel:byId('edit-cancel'), editSave:byId('edit-save'),
+  editId:byId('edit-id'), editStart:byId('edit-start'), editEnd:byId('edit-end'),
+  editLine:byId('edit-line'), editOperator:byId('edit-operator'), editOrder:byId('edit-order'), editItem:byId('edit-item'),
+  editReason:byId('edit-reason'), editChips:byId('edit-chips'), editOther:byId('edit-other'), editComment:byId('edit-comment'),
+  btnCsv:byId('btn-csv'), btnJson:byId('btn-json'), btnEmail:byId('btn-email'), btnClearLog:byId('btn-clear-log'),
+  ovEmail:byId('ov-email'), emailClose:byId('email-close'), emailCancel:byId('email-cancel'), emailSend:byId('email-send'),
+  emailTo:byId('email-to'), emailCc:byId('email-cc'), emailSubj:byId('email-subj'), emailBody:byId('email-body'), emailAttach:byId('email-attach'),
+  defTo:byId('defTo'), brandColor:byId('brandColor'), btnSaveSettings:byId('btn-save-settings'),
+  causeCode:byId('causeCode'), causeLabel:byId('causeLabel'), causeChips:byId('causeChips'), btnAddCause:byId('btn-add-cause'),
+  btnResetCauses:byId('btn-reset-causes'), causeList:byId('causeList')
 };
 
-/* ---------- Utils ---------- */
-const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
-const fmt=n=>String(n).padStart(2,'0');
-const isoToLocal=iso=>iso?new Date(iso).toLocaleString():'–';
-const uid=()=> 'tjek-'+Date.now()+'-'+Math.floor(Math.random()*1e6);
-const nowISO=()=>new Date().toISOString();
-const idMs=id=>{const m=/tjek-(\d+)-/.exec(id||'');return m?+m[1]:0};
-const sortKey=s=>Date.parse(s.updatedAt||s.sentAt||0)||idMs(s.id)||0;
-const statusText=$('#statusText'), statusDot=$('#statusDot');
-function setStatus(text,color){ statusText.textContent=text; statusDot.style.background=color; }
-
-/* ---------- Sessions ---------- */
-const SKEY='omstilling.sessions.v3';
-const AKEY='omstilling.activeId.v1';
-function emptyPayload(templateKey='form_stanse_adskilt'){
-  return {templateKey,meta:{operator:'',line:'',linenumber:'',order:'',toolno:'',approver:'',approveCheck:false},
-          stamps:{stepStart:{1:null,2:null,3:null,4:null,5:null,6:null},inRunISO:null},tasks:{},comments:{general:''}};
+/* ===== Tabs ===== */
+function setActiveTab(which){
+  var tabs=[els.tabReg,els.tabHist,els.tabShare,els.tabSettings],i;
+  for(i=0;i<tabs.length;i++){remClass(tabs[i],'active');}
+  addClass(which,'active');
+  hide(els.viewReg); hide(els.viewHist); hide(els.viewShare); hide(els.viewSettings);
+  if(which===els.tabReg)show(els.viewReg);
+  else if(which===els.tabHist)show(els.viewHist);
+  else if(which===els.tabShare)show(els.viewShare);
+  else show(els.viewSettings);
 }
-const getSessions=()=>{try{return JSON.parse(localStorage.getItem(SKEY))||[]}catch(e){return[]}};
-const saveSessions=s=>localStorage.setItem(SKEY,JSON.stringify(s));
-const getActiveId=()=>localStorage.getItem(AKEY);
-const setActiveId=id=>localStorage.setItem(AKEY,id);
+els.tabReg.onclick=function(){setActiveTab(els.tabReg);};
+els.tabHist.onclick=function(){setActiveTab(els.tabHist);};
+els.tabShare.onclick=function(){setActiveTab(els.tabShare);};
+els.tabSettings.onclick=function(){setActiveTab(els.tabSettings);};
 
-/* Første kørsel */
-(function(){let s=getSessions(); if(s.length) return; const id=uid(), now=nowISO();
-  s=[{id,title:'Tjekliste',sent:false,sentAt:null,createdAt:now,updatedAt:now,payload:emptyPayload('form_stanse_adskilt')}];
-  saveSessions(s); setActiveId(id);
-})();
+/* ===== Status/timer ===== */
+var isStopped=false, stopStartISO=null, stopMeta=null, timer=null;
+function setStatus(st){isStopped=st;els.btnStop.disabled=st;els.btnStart.disabled=!st;els.dot.style.background=st?'var(--danger)':'var(--ok)';els.statxt.innerHTML=st?'Stoppet':'Kører';els.liveTimer.innerHTML=st?'Stop varighed: 00:00:00':'—';}
+function tick(){if(!isStopped)return;var ms=(new Date().getTime())-(new Date(stopStartISO).getTime());els.liveTimer.innerHTML='Stop varighed: '+fmtDur(ms);}
 
-/* ---------- Faner ---------- */
-/* >>>>>>>>>>  KUN VÆRKTØJSNR + LINJE i fanetitlen  <<<<<<<<<< */
-function formatTabTitle(p){
-  const lineRaw = (p.meta?.line || '').toString().trim();
-  const toolRaw = (p.meta?.toolno || '').toString().trim();
+/* ===== Kapacitet ===== */
+var QUOTA=5*1024*1024;
+function updateUsage(){var used=0;try{used+=bytesLen(localStorage.getItem(STORAGE)||'');}catch(e){}try{used+=bytesLen(localStorage.getItem(SETTINGS)||'');}catch(e){}var pct=Math.min(100,Math.round((used/QUOTA)*100));els.usageTxt.innerHTML=pct+'% ('+Math.round(used/1024)+' KB af 5120 KB)';els.usageFill.style.width=pct+'%';els.usageTxt.className=(pct>=90)?'danger':(pct>=80)?'warn':'';}
 
-  const parts = [];
+/* ===== Grafer ===== */
+function renderBars(containerId,rows,maxVal,isDuration){var el=byId(containerId);if(!el)return;if(!rows||!rows.length){el.innerHTML='<div class="muted">Ingen data endnu</div>';return;}var html='',i;for(i=0;i<rows.length;i++){var p=maxVal>0?Math.round((rows[i].v/maxVal)*100):0;var valTxt=isDuration?fmtDur(rows[i].v):(rows[i].v+' stk');html+='<div class="bar-row"><div class="bar-label">'+rows[i].label+'</div><div class="bar"><div style="width:'+p+'%"></div></div><div class="bar-val">'+valTxt+'</div></div>';}el.innerHTML=html;}
+function computeStats(){var rows=loadEvents(),map={},i,r,code,label;for(i=0;i<rows.length;i++){r=rows[i];if(!r||!r.reason)continue;code=r.reason.code||'ANDET';label=(r.reason.code||'')+' — '+(r.reason.label||r.reason.code||'');if(!map[code])map[code]={label:label,count:0,dur:0};map[code].count+=1;map[code].dur+=(r.durationMs||0);}var arr=[],k;for(k in map){if(map.hasOwnProperty(k))arr.push({code:k,label:map[k].label,count:map[k].count,dur:map[k].dur});}return arr;}
+function renderCharts(){var stats=computeStats(),i;var freq=stats.slice().sort(function(a,b){return b.count-a.count;});var maxC=0;for(i=0;i<freq.length;i++){if(freq[i].count>maxC)maxC=freq[i].count;}var freqRows=[];for(i=0;i<freq.length;i++){freqRows.push({label:freq[i].label,v:freq[i].count});}renderBars('freqBars',freqRows,maxC,false);var dur=stats.slice().sort(function(a,b){return b.dur-a.dur;});var maxD=0;for(i=0;i<dur.length;i++){if(dur[i].dur>maxD)maxD=dur[i].dur;}var durRows=[];for(i=0;i<dur.length;i++){durRows.push({label:dur[i].label,v:dur[i].dur});}renderBars('durBars',durRows,maxD,true);}
 
-  if (toolRaw) {
-    const toolDisplay = /^vkt/i.test(toolRaw) ? toolRaw : `VKT ${toolRaw}`;
-    parts.push(toolDisplay);
-  }
+/* ===== Tabel ===== */
+function renderTable(){var rows=loadEvents().sort(function(a,b){return (new Date(b.start))-(new Date(a.start));});var html='',i;for(i=0;i<rows.length;i++){var ev=rows[i];html+='<tr>'
++'<td><span class="muted">'+fmtDate(ev.start)+'</span></td>'
++'<td><span class="muted">'+(ev.end?fmtDate(ev.end):'—')+'</span></td>'
++'<td>'+(ev.durationMs?fmtDur(ev.durationMs):'—')+'</td>'
++'<td>'+(ev.line||'')+'</td>'
++'<td>'+(ev.orderNo||'')+'</td>'
++'<td>'+(ev.itemNo||'')+'</td>'
++'<td><span class="pill">'+((ev.reason&&ev.reason.code)||'')+'</span> '+((ev.reason&&ev.reason.label)||'')+'</td>'
++'<td>'+((ev.detailChips||[]).join(', '))+' '+(ev.other||'')+'</td>'
++'<td>'+(ev.comment||'')+'</td>'
++'<td>'+(ev.operator||'')+'</td>'
++'<td class="right"><button class="btn" data-action="edit" data-id="'+ev.id+'">Redigér</button> <button class="btn btn-stop" data-action="delete" data-id="'+ev.id+'">Slet</button></td>'
++'</tr>'; }
+els.tableBody.innerHTML=html;els.countPosts.innerHTML=''+rows.length;updateUsage();renderCharts();}
 
-  if (lineRaw) {
-    const lineDisplay = /^\d+$/.test(lineRaw) ? `Linje ${lineRaw}` : lineRaw;
-    parts.push(lineDisplay);
-  }
+/* ===== Persist ===== */
+function hasRequired(){return (els.orderNo.value||'').trim()&&(els.itemNo.value||'').trim();}
+function syncLine(){var s=loadSettings(),v=(els.line.value||'');s.line=(v.indexOf('INAKTIV')>-1)?'':v;s.operator=(els.operator.value||'');saveSettings(s);}
+function syncOrder(){var s=loadSettings();s.orderNo=(els.orderNo.value||'');s.itemNo=(els.itemNo.value||'');saveSettings(s);}
 
-  return parts.length ? parts.join(' · ') : 'Tjekliste';
+/* ===== Export ===== */
+function makeCsv(rows){function repl(s){return String(s||'').split(';').join(',');}function clean(s){return String(s||'').replace(/\n/g,' ');}var header=['id','start','slut','varighed_ms','varighed_hhmmss','linje','ordre','vare','kode','kode_label','uddybning','andet','kommentar','operatør'].join(';');var body=[];for(var i=0;i<rows.length;i++){var r=rows[i];var code=(r.reason&&r.reason.code)||'';var label=(r.reason&&r.reason.label)||'';body.push([r.id,r.start,r.end,r.durationMs,fmtDur(r.durationMs||0),repl(r.line),repl(r.orderNo),repl(r.itemNo),code,label,repl((r.detailChips||[]).join('|')),repl(r.other),repl(clean(r.comment)),repl(r.operator)].join(';'));}return header+'\n'+body.join('\n');}
+function download(filename,text){var blob=new Blob([text],{type:'text/plain;charset=utf-8;'});if(window.navigator&&window.navigator.msSaveBlob){window.navigator.msSaveBlob(blob,filename);}else{var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},500);}}
+
+/* ===== STOP modal (årsager/uddybning) ===== */
+function selectedChips(){var inputs=els.reasonChips.getElementsByTagName('input'),arr=[],i;for(i=0;i<inputs.length;i++){if(inputs[i].checked)arr.push(inputs[i].value);}return arr;}
+function getReasonFreq(){var s=loadSettings();return s.reasonFreq||{};}
+function bumpReasonFreq(code){var s=loadSettings();if(!s.reasonFreq)s.reasonFreq={};s.reasonFreq[code]=(s.reasonFreq[code]||0)+1;saveSettings(s);}
+
+function chipHtmlRadio(code,label,count){
+  var badge=count?(' <span class="badge">'+count+'</span>'):'';
+  return '<label class="chip chip-radio"><input type="radio" name="reasonRadio" value="'+code+'"><span class="txt">'+code+' — '+label+'</span>'+badge+'</label>';
 }
-
-function renderTabs(){
-  const tabsEl=$('#tabs');
-  tabsEl.querySelectorAll('.tab[data-id], .tab-more').forEach(n=>n.remove());
-  const sessions=getSessions(), activeId=getActiveId();
-  const sorted=[...sessions].sort((a,b)=>sortKey(b)-sortKey(a));
-  let visible=sorted.slice(0,3);
-  const active=sessions.find(x=>x.id===activeId);
-  if(active && !visible.some(v=>v.id===active.id)) visible=[active,...visible].slice(0,3);
-
-  visible.forEach(s=>{
-    const p=s.payload||emptyPayload();
-    const el=document.createElement('div');
-    el.className='tab'+(s.sent?' sent':''); el.setAttribute('data-id',s.id);
-    el.setAttribute('role','tab'); el.tabIndex=0; el.setAttribute('aria-selected', s.id===activeId?'true':'false');
-    el.innerHTML=`
-      <div class="row">
-        <span class="dot" style="width:8px;height:8px;border-radius:999px;background:${s.sent?'var(--success)':'var(--accent)'}"></span>
-        <span class="title">${formatTabTitle(p)}</span>
-        <span class="badgeAct">Aktiv</span>
-        <button type="button" class="close" title="${s.sent?'Slet':'Slet kladde'}">${s.sent?'✖':'🗑︎'}</button>
-      </div>
-      <div class="meta">${(TEMPLATES[p.templateKey]||{}).name || 'Skabelon'} • <span class="state">${s.sent?'Åben (sendt)':'Åben'}</span></div>
-    `;
-    el.querySelector('.close').addEventListener('click',(e)=>{
-      e.stopPropagation();
-      if(!confirm(s.sent?'Slet sendt tjekliste?':'Slet kladde?')) return;
-      const list=getSessions().filter(x=>x.id!==s.id);
-      saveSessions(list);
-      const next=(list.find(x=>x.id===activeId)?activeId:(list[0]?.id));
-      if(next) setActiveId(next);
-      renderTabs(); loadActiveIntoForm(); renderHistory();
-    });
-    el.addEventListener('click',()=>{ if(s.id!==getActiveId()){ autoSaveSession(); setActiveId(s.id); renderTabs(); loadActiveIntoForm(); } setView('main'); });
-    el.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault(); el.click();}});
-    tabsEl.insertBefore(el,$('#addTab'));
-  });
-
-  const hidden=sessions.length-visible.length;
-  if(hidden>0){
-    const more=document.createElement('div');
-    more.className='tab-more'; more.textContent=`⋯ ${hidden} flere`; more.setAttribute('role','button'); more.tabIndex=0;
-    more.addEventListener('click',()=>setView('hist'));
-    tabsEl.insertBefore(more,$('#addTab'));
-  }
-}
-document.getElementById('tabs').addEventListener('click',(e)=>{
-  const tab=e.target.closest('.tab[data-id]'); if(tab){ autoSaveSession(); setActiveId(tab.getAttribute('data-id')); renderTabs(); loadActiveIntoForm(); setView('main'); }
-});
-$('#addTab').addEventListener('click',()=>openTemplateChooser((tmplKey)=>{
-  autoSaveSession(); const list=getSessions(); const id=uid(); const now=nowISO();
-  list.push({id,title:'Tjekliste',sent:false,sentAt:null,createdAt:now,updatedAt:now,payload:emptyPayload(tmplKey)});
-  saveSessions(list); setActiveId(id); renderTabs(); resetForm(); loadActiveIntoForm(); renderHistory();
-}));
-
-/* ---------- Tema + Print ---------- */
-(function(){
-  const btn = document.getElementById('themeToggle');
-  function setTheme(mode){
-    if(mode==='light'){ document.body.setAttribute('data-theme','light'); localStorage.setItem('omstilling.theme','light'); }
-    else { document.body.removeAttribute('data-theme'); localStorage.setItem('omstilling.theme','dark'); }
-    btn.textContent = (document.body.getAttribute('data-theme')==='light') ? '🌙 Mørk' : '☀️ Lys';
-  }
-  setTheme(localStorage.getItem('omstilling.theme')||'dark');
-  btn.addEventListener('click',()=>setTheme(document.body.getAttribute('data-theme')==='light'?'dark':'light'));
-  document.getElementById('printBtn').addEventListener('click',()=>window.print());
-})();
-
-/* ---------- BFS renummering UI ---------- */
-let DISPLAY_MAP={1:1,2:2,3:3,4:4,5:5,6:6};
-let DISPLAY_ORDER=[1,2,3,4,5,6];
-function recomputeDisplayMapping(tmpl){
-  const hidden=new Set(tmpl.hideSteps||[]); DISPLAY_MAP={}; DISPLAY_ORDER=[]; let disp=0;
-  for(let n=1;n<=6;n++){ const st=tmpl.steps[n]||{tasks:[]}; const hide=hidden.has(n)||(st.tasks.length===0); if(hide) continue; disp++; DISPLAY_MAP[n]=disp; DISPLAY_ORDER.push(n); }
-}
-function updateTimeLabels(){
-  const A=DISPLAY_ORDER; const pairs=[[A[0],A[1]],[A[1],A[2]],[A[2],A[3]],[A[3],A[4]]];
-  const ids=['lbl12','lbl23','lbl34','lbl45'];
-  pairs.forEach((p,i)=>{ const a=p?.[0],b=p?.[1]; const txt=(a&&b)?`Trin ${DISPLAY_MAP[a]} → ${DISPLAY_MAP[b]}`:'—'; const el=document.getElementById(ids[i]); if(el) el.textContent=txt; });
-  const firstDisp = DISPLAY_MAP[ DISPLAY_ORDER[0] ] || 1;
-  $('#lblTot').textContent=`Start (Trin ${firstDisp}) → I DRIFT`;
-}
-function buildTasksFromTemplate(tmplKey,payload){
-  const tmpl=TEMPLATES[tmplKey]||TEMPLATES['form_stanse_adskilt']; recomputeDisplayMapping(tmpl);
-  for(let n=1;n<=6;n++){
-    const step=tmpl.steps[n]||{title:`Trin ${n}`,tasks:[]};
-    const card=document.querySelector(`[data-stepcard="${n}"]`);
-    const titleEl=document.querySelector(`.stepTitle[data-st="${n}"]`);
-    const hide=(tmpl.hideSteps||[]).includes(n)||(step.tasks.length===0);
-    card.style.display=hide?'none':'block';
-    const dsp=DISPLAY_MAP[n]??n; titleEl.textContent=step.title.replace(/^Trin\s*\d+/, 'Trin '+dsp);
-    const root=document.getElementById(`tasks-${n}`); root.innerHTML='';
-    step.tasks.forEach((txt,idx)=>{
-      const key=`t${n}_${idx+1}`; const iso=payload?.tasks?.[key]||null;
-      const div=document.createElement('div'); div.className='task'+(iso?' done':'');
-      div.innerHTML=`<input type="checkbox" data-t="${key}" ${iso?'checked':''} /><div class="txt">${txt}</div><span class="ts" id="ts_${key}" ${iso?`data-iso="${iso}"`:''}>${iso?isoToLocal(iso):'–'}</span>`;
-      root.appendChild(div);
-    });
-  }
-  TOTAL_TASKS=$$('input[type="checkbox"][data-t]').length;
-  updateTimeLabels(); updateProgress();
+function chipHtmlCheck(txt,checked){
+  return '<label class="chip chip-check'+(checked?' selected':'')+'"><input type="checkbox"'+(checked?' checked':'')+' value="'+txt+'"><span class="txt">'+txt+'</span></label>';
 }
 
-/* ---------- State & events ---------- */
-const stepStart={1:null,2:null,3:null,4:null,5:null,6:null}; let inRunISO=null, showOnlyOpen=false, TOTAL_TASKS=0;
-const progBar=$('#progBar'), progText=$('#progText');
-function updateProgress(){ const all=$$('input[type="checkbox"][data-t]'); const done=all.filter(cb=>cb.checked).length; const total=all.length; const pct=total?Math.round(done*100/total):0; progBar.style.width=pct+'%'; progText.textContent=`${done} / ${total} færdige`; }
-
-document.addEventListener('change',(e)=>{
-  if(!e.target.matches('input[type="checkbox"][data-t]')) return;
-  const cb=e.target, id='ts_'+cb.getAttribute('data-t'), el=document.getElementById(id);
-  if(cb.checked){ const iso=new Date().toISOString(); el.textContent=isoToLocal(iso); el.dataset.iso=iso; } else { el.textContent='–'; delete el.dataset.iso; }
-  cb.closest('.task').classList.toggle('done',cb.checked); computeTimes(); updateProgress(); autoSaveSession(); renderHistory();
-});
-document.addEventListener('click',(e)=>{
-  const b=e.target.closest('[data-stamp-btn]'); if(!b) return;
-  const n=+b.getAttribute('data-stamp-btn'); const iso=new Date().toISOString();
-  stepStart[n]=iso; $('#t'+n+'Start').textContent=isoToLocal(iso); if(n===1) setStatus('I gang','#f59e0b'); computeTimes(); updateProgress(); autoSaveSession(); renderHistory();
-});
-$('#btnInRun').addEventListener('click',()=>{
-  const all=$$('input[type="checkbox"][data-t]').every(cb=>cb.checked);
-  const ok=($('#approver')?.value||'').trim().length>0 && $('#approveCheck').checked;
-  if(!all) return toast('error','Alle tjekpunkter i Trin 1–6 skal være markeret før I DRIFT.');
-  if(!ok)  return toast('error','Udfyld Godkender og sæt bekræftelse.');
-  inRunISO=new Date().toISOString(); $('#tInRun').textContent=isoToLocal(inRunISO); setStatus('I drift','#22c55e'); computeTimes(); updateProgress(); autoSaveSession(); renderHistory();
-});
-$('#toggleDone').addEventListener('click',()=>{
-  showOnlyOpen=!showOnlyOpen;
-  $$('.task').forEach(t=>{ const cb=t.querySelector('input[type="checkbox"][data-t]'); t.classList.toggle('done',cb.checked); t.style.display=(showOnlyOpen&&cb.checked)?'none':'flex'; });
-  $('#toggleDone').textContent=showOnlyOpen?'Vis alle':'Vis kun åbne';
-});
-function diff(a,b){ if(!a||!b) return 0; return Math.max(0,Math.floor((new Date(b)-new Date(a))/1000)); }
-function fmtHMS(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60; return `${fmt(h)}:${fmt(m)}:${fmt(ss)}`; }
-function computeTimes(){
-  const ord=DISPLAY_ORDER.length?DISPLAY_ORDER:[1,2,3,4,5,6];
-  const pairs=[[ord[0],ord[1]],[ord[1],ord[2]],[ord[2],ord[3]],[ord[3],ord[4]]];
-  ['r12','r23','r34','r45'].forEach((id,i)=>{ const a=pairs[i]?.[0], b=pairs[i]?.[1]; document.getElementById(id).textContent=fmtHMS(diff(stepStart[a],stepStart[b])); });
-  let total=inRunISO; for(let i=ord.length-1;i>=0 && !total;i--){ const s=stepStart[ord[i]]; if(s) total=s; }
-  const start=stepStart[ord[0]]; $('#rTotal').textContent=fmtHMS(diff(start,total));
+function renderChipsByCode(code){
+  var r=getReasonByCode(code)||{chips:[]}, chips=r.chips||[], html='',i;
+  for(i=0;i<chips.length;i++){ html+=chipHtmlCheck(chips[i], false); }
+  els.reasonChips.innerHTML=html;
 }
 
-/* ---------- Collect / Apply ---------- */
-function collect(){
-  const tasks={}; $$('.task .ts').forEach(el=>{ if(el.id.startsWith('ts_')) tasks[el.id.replace('ts_','')]=el.dataset.iso||null; });
-  return {templateKey:$('#tmplSelect').value||'form_stanse_adskilt',
-          meta:{
-            operator:($('#operator').value||'').trim(),
-            line:($('#line').value||'').trim(),
-            linenumber:($('#varenr').value||'').trim(),  // VARE NR. -> linenumber (payload)
-            order:($('#order').value||'').trim(),
-            toolno:($('#toolno').value||'').trim(),
-            approver:($('#approver').value||'').trim(),
-            approveCheck:$('#approveCheck').checked
-          },
-          stamps:{stepStart:{...stepStart},inRunISO},
-          tasks,
-          comments:{general:$('#generalComment')?.value||''}};
-}
-function resetForm(){
-  $('#form').reset(); for(let k=1;k<=6;k++){ stepStart[k]=null; $('#t'+k+'Start').textContent='–'; }
-  inRunISO=null; $('#tInRun').textContent='–'; $$('.tasks').forEach(el=>el.innerHTML='');
-  $('#toggleDone').textContent='Vis kun åbne'; showOnlyOpen=false; computeTimes(); updateProgress(); setStatus('Klar','#64748b');
-}
-function applyPayload(p){
-  const sel=$('#tmplSelect'); sel.innerHTML=''; Object.entries(TEMPLATES).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.name;sel.appendChild(o);});
-  sel.value=p.templateKey||'form_stanse_adskilt';
-  $('#operator').value=p.meta?.operator||''; $('#line').value=p.meta?.line||''; $('#varenr').value=p.meta?.linenumber||''; $('#order').value=p.meta?.order||''; $('#toolno').value=p.meta?.toolno||'';
-  $('#approver').value=p.meta?.approver||''; $('#approveCheck').checked=!!p.meta?.approveCheck;
-  for(let k=1;k<=6;k++){ stepStart[k]=p.stamps?.stepStart?.[k]||null; $('#t'+k+'Start').textContent=stepStart[k]?isoToLocal(stepStart[k]):'–'; }
-  inRunISO=p.stamps?.inRunISO||null; $('#tInRun').textContent=inRunISO?isoToLocal(inRunISO):'–'; if(inRunISO) setStatus('I drift','#22c55e');
-  buildTasksFromTemplate(sel.value,p); $('#generalComment').value=p.comments?.general||''; computeTimes(); updateProgress();
-}
-$('#tmplSelect').addEventListener('change',()=>{
-  if(!confirm('Skifte skabelon for denne tjekliste?')){ const id=getActiveId(); const s=getSessions().find(x=>x.id===id); $('#tmplSelect').value=s?.payload?.templateKey||'form_stanse_adskilt'; return; }
-  const cur=collect(); cur.templateKey=$('#tmplSelect').value; buildTasksFromTemplate(cur.templateKey,cur); autoSaveSession(); renderTabs(); renderHistory();
-});
-
-/* ---------- Knapper nederst ---------- */
-$('#saveDraft').addEventListener('click',()=>{ autoSaveSession(); toast('ok','Kladde gemt.'); renderHistory(); });
-$('#clearBtn').addEventListener('click',()=>{ if(!confirm('Ryd kun den aktive tjekliste?'))return; resetForm(); autoSaveSession(); toast('ok','Tjekliste nulstillet.'); renderHistory(); });
-$('#form').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const activeId=getActiveId(); const list=getSessions(); const idx=list.findIndex(x=>x.id===activeId); if(idx<0) return;
-  if(!$('#operator').value || !$('#line').value) return toast('error','Udfyld Omstiller og Linje.');
-  const payload=collect();
-  try{
-    const use=typeof window.OMSTILLING_ENDPOINT==='string' && window.OMSTILLING_ENDPOINT.length>10;
-    if(use){
-      const res=await fetch(window.OMSTILLING_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      toast('ok','Indsendt til flow.'); list[idx].payload=payload; list[idx].sent=true; list[idx].sentAt=nowISO(); list[idx].updatedAt=list[idx].sentAt;
-      saveSessions(list); renderTabs(); setReadOnly(true); setStatus('Klar','#64748b'); updateProgress(); renderHistory();
-    }else{
-      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-      const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`omstilling-${new Date().toISOString().replace(/[:.]/g,'-')}.json`; a.click(); URL.revokeObjectURL(url);
-      toast('ok','Downloadede data som .json'); list[idx].payload=payload; list[idx].updatedAt=nowISO(); saveSessions(list); renderHistory();
+function markSelectedChipStates(){
+  // Marker valgt årsag
+  var radios=els.reasonButtons.querySelectorAll('input[name="reasonRadio"]');
+  for(var i=0;i<radios.length;i++){
+    var lbl=radios[i].parentNode;
+    if(lbl && lbl.className.indexOf('chip-radio')>-1){
+      if(radios[i].checked) addClass(lbl,'selected'); else remClass(lbl,'selected');
     }
-  }catch(err){ console.error(err); toast('error','Kunne ikke indsende.'); }
-});
-function autoSaveSession(){ const id=getActiveId(); if(!id) return; const list=getSessions(); const idx=list.findIndex(x=>x.id===id); if(idx<0) return; list[idx].payload=collect(); list[idx].updatedAt=nowISO(); saveSessions(list); renderTabs(); }
-function setReadOnly(sent){ const dis=!!sent; $$('input,select,textarea,button').forEach(el=>{ if(['themeToggle','printBtn'].includes(el.id))return; if(el.closest('.tabs'))return; if(el.classList.contains('close'))return; if(el.id==='addTab')return; el.disabled=dis; }); }
-
-/* ---------- Historik ---------- */
-const STEP_NAMES_DEFAULT={1:'Forberedelse',2:'Form Station',3:'Stanse Station',4:'Stabel Station',5:'Indlæs & Justering',6:'Indkøring'};
-function sessionStatus(p){ if(p.stamps?.inRunISO) return {txt:'I drift',dot:'var(--success)'}; const any=Object.values(p.stamps?.stepStart||{}).some(Boolean); if(any) return {txt:'I gang',dot:'var(--warn)'}; return {txt:'Klar',dot:'#64748b'}; }
-function currentStep(p){
-  const starts=p.stamps?.stepStart||{}; let n=0; Object.keys(starts).forEach(k=>{ if(starts[k]) n=Math.max(n,+k); });
-  if(!n){ Object.keys(p.tasks||{}).forEach(k=>{ const m=/^t(\d+)_/.exec(k); if(m) n=Math.max(n,+m[1]); }); }
-  n=Math.max(1,Math.min(6,n||1)); const tmpl=TEMPLATES[p.templateKey||'form_stanse_adskilt']; const title=tmpl?.steps?.[n]?.title || `Trin ${n} — ${STEP_NAMES_DEFAULT[n]}`;
-  const hidden=new Set(tmpl.hideSteps||[]); let disp=0,dnum=1; for(let i=1;i<=6;i++){ const st=tmpl.steps[i]||{tasks:[]}; const hide=hidden.has(i)||(st.tasks.length===0); if(!hide){ disp++; if(i===n){ dnum=disp; break; } } }
-  return {num:dnum, name:title.replace(/^Trin \d+\s*–?\s*/,'')};
-}
-function progressOf(p){ const done=Object.values(p.tasks||{}).filter(Boolean).length; const tmpl=TEMPLATES[p.templateKey||'form_stanse_adskilt']; const total=Object.values(tmpl.steps).reduce((a,s)=>a+(s.tasks?.length||0),0); const pct=total?Math.round(done*100/total):0; return {done,total,pct}; }
-function renderHistory(){
-  const body=$('#histBody'), empty=$('#histEmpty'); const rows=getSessions().filter(s=>!s.sent);
-  if(!rows.length){ body.innerHTML=''; empty.style.display='block'; return; } empty.style.display='none';
-  let html=''; rows.sort((a,b)=>sortKey(b)-sortKey(a)).forEach(s=>{
-    const p=s.payload||emptyPayload(); const st=sessionStatus(p), step=currentStep(p), prog=progressOf(p);
-    html+=`<tr><td><span class="chip"><span class="dot" style="background:${st.dot}"></span>${st.txt}</span></td>
-           <td><span class="pill">Trin ${step.num} — ${step.name}</span></td>
-           <td style="min-width:200px"><div class="miniBar"><span style="width:${prog.pct}%"></span></div><div class="note">${prog.done} / ${prog.total} (${prog.pct}%)</div></td>
-           <td>${p.meta?.operator||'–'}</td><td>${/^\d+$/.test(p.meta?.line||'')?'Linje '+p.meta.line:(p.meta?.line||'–')}</td><td>${p.meta?.order||'–'}</td>
-           <td><button class="btn secondary" data-open="${s.id}">Åbn</button></td></tr>`;
-  });
-  body.innerHTML=html; body.querySelectorAll('button[data-open]').forEach(b=>{ b.onclick=()=>{ autoSaveSession(); setActiveId(b.getAttribute('data-open')); renderTabs(); loadActiveIntoForm(); setView('main'); }; });
+  }
+  // Marker valgte uddybninger
+  var checks=els.reasonChips.querySelectorAll('input[type="checkbox"]');
+  for(var j=0;j<checks.length;j++){
+    var lbl2=checks[j].parentNode;
+    if(lbl2 && lbl2.className.indexOf('chip-check')>-1){
+      if(checks[j].checked) addClass(lbl2,'selected'); else remClass(lbl2,'selected');
+    }
+  }
 }
 
-/* ---------- Template modal ---------- */
-function openTemplateChooser(onPick){
-  const modal=$('#templateModal'), row=$('#tmplBtns'); row.innerHTML='';
-  Object.entries(TEMPLATES).forEach(([k,v])=>{ const b=document.createElement('button'); b.className='tmplBtn'; b.type='button';
-    const total=Object.values(v.steps).reduce((a,s)=>a+(s.tasks?.length||0),0);
-    b.innerHTML=`<strong>${v.name}</strong><div class="note">${total} punkter • kanoniske 6 trin</div>`; b.onclick=()=>{ modal.hidden=true; onPick(k); };
-    row.appendChild(b);
-  });
-  $('#tmplCancel').onclick=()=>{ modal.hidden=true; }; modal.hidden=false;
+function renderReasonButtons(){
+  var list=getAllReasons(),freq=getReasonFreq();
+  list.sort(function(a,b){var fa=freq[a.code]||0,fb=freq[b.code]||0;if(fb!==fa)return fb-fa;return a.label.localeCompare(b.label);});
+  var TOP_N=10, topHtml='', moreHtml='';
+  for(var i=0;i<list.length;i++){
+    var f=(freq[list[i].code]||0);
+    var chip=chipHtmlRadio(list[i].code, list[i].label, f);
+    if(i<TOP_N) topHtml+=chip; else moreHtml+=chip;
+  }
+  els.reasonTop.innerHTML=topHtml;
+  els.reasonMore.innerHTML=moreHtml;
+  if(moreHtml){els.reasonMore.style.display='flex';els.reasonMoreLabel.style.display='block';}
+  else{els.reasonMore.style.display='none';els.reasonMoreLabel.style.display='none';}
+  var first=els.reasonButtons.querySelector('input[name="reasonRadio"]');
+  if(first){ first.checked=true; renderChipsByCode(first.value); }
+  markSelectedChipStates();
 }
 
-/* ---------- Toast ---------- */
-function toast(kind,msg){
-  const fb=$('#feedback'); const d=document.createElement('div'); d.style.marginTop='10px'; d.style.padding='12px'; d.style.borderRadius='12px';
-  d.style.background = kind==='ok' ? '#052e1c' : '#3b0a0a'; d.style.color = kind==='ok' ? '#86efac' : '#fecaca'; d.style.border = '1px solid ' + (kind==='ok' ? '#0a7a41' : '#7f1d1d');
-  d.textContent=msg; fb.innerHTML=''; fb.appendChild(d); setTimeout(()=>{ if(fb.contains(d)) fb.removeChild(d); },6000);
+function filterReasons(q){
+  q=(q||'').trim().toLowerCase();
+  var labels=els.reasonButtons.querySelectorAll('.chip-radio');
+  for(var i=0;i<labels.length;i++){
+    var t=labels[i].innerText.toLowerCase();
+    labels[i].style.display=(q && t.indexOf(q)===-1)?'none':'inline-flex';
+  }
 }
 
-/* ---------- View & init ---------- */
-function setView(which){ if(which==='hist'){ $('#view-main').style.display='none'; $('#view-hist').style.display='block'; $('#navMain').classList.remove('active'); $('#navHist').classList.add('active'); renderHistory(); } else { $('#view-main').style.display='block'; $('#view-hist').style.display='none'; $('#navMain').classList.add('active'); $('#navHist').classList.remove('active'); } }
-$('#navMain').onclick=()=>setView('main'); $('#navHist').onclick=()=>setView('hist');
-
-(function init(){
-  const sel=$('#tmplSelect'); sel.innerHTML=''; Object.entries(TEMPLATES).forEach(([k,v])=>{const o=document.createElement('option'); o.value=k; o.textContent=v.name; sel.appendChild(o);});
-  const saved=localStorage.getItem('omstilling.theme')||'dark'; if(saved==='light') document.body.setAttribute('data-theme','light');
-  renderTabs(); loadActiveIntoForm(); updateProgress(); renderHistory();
-  window.onerror=(msg,src,line,col,err)=>{ alert('JavaScript-fejl: '+msg+' (linje '+line+')'); console.error(err||msg); return false; };
-})();
-function loadActiveIntoForm(){
-  const id=getActiveId(), list=getSessions(), s=list.find(x=>x.id===id)||list[0];
-  if(!s){ const nId=uid(), now=nowISO(); list.push({id:nId,title:'Tjekliste',sent:false,sentAt:null,createdAt:now,updatedAt:now,payload:emptyPayload('form_stanse_adskilt')}); saveSessions(list); setActiveId(nId); renderTabs(); return loadActiveIntoForm(); }
-  resetForm(); applyPayload(s.payload||emptyPayload('form_stanse_adskilt')); setReadOnly(s.sent);
+/* Delegation for klik + keyboard */
+function onReasonAreaClick(e){
+  var t=e.target||e.srcElement;
+  if(t && t.name==='reasonRadio'){
+    renderChipsByCode(t.value);
+    markSelectedChipStates();
+    els.stopValidation.innerHTML='';
+  }
 }
+function onChipsClick(e){
+  var t=e.target||e.srcElement;
+  if(t && t.type==='checkbox'){
+    // toggle class via markSelectedChipStates
+    markSelectedChipStates();
+  }
+}
+
+/* ===== STOP/START flow ===== */
+els.btnStop.onclick=function(){openOv('ov-stop');renderReasonButtons();els.stopValidation.innerHTML='';};
+els.stopClose.onclick=function(){closeOv('ov-stop');};
+els.stopCancel.onclick=function(){closeOv('ov-stop');};
+if(els.reasonButtons.addEventListener){els.reasonButtons.addEventListener('click',onReasonAreaClick,false);}
+if(els.reasonChips.addEventListener){els.reasonChips.addEventListener('click',onChipsClick,false);}
+els.reasonSearch.onkeyup=function(){filterReasons(this.value);};
+
+els.stopConfirm.onclick=function(){
+  if(!hasRequired()){els.stopValidation.innerHTML='Udfyld Ordre nr. og Vare nr. i hovedskærmen før du bekræfter.';return;}
+  var radios=els.reasonButtons.querySelectorAll('input[name="reasonRadio"]'),code=null,i;
+  for(i=0;i<radios.length;i++){if(radios[i].checked){code=radios[i].value;break;}}
+  if(!code){var all=getAllReasons();code=(all[0]&&all[0].code)||'ANDET';}
+  var reason=getReasonByCode(code)||{code:code,label:code};
+  stopMeta={reason:{code:reason.code,label:reason.label},detailChips:selectedChips(),other:(els.other.value||'').trim(),comment:(els.comment.value||'').trim()};
+  stopStartISO=new Date().toISOString();
+  setStatus(true); if(timer)clearInterval(timer); timer=setInterval(tick,1000); tick();
+  bumpReasonFreq(code);
+  closeOv('ov-stop');
+};
+
+els.btnStart.onclick=function(){
+  if(!isStopped)return;
+  var end=new Date(),start=new Date(stopStartISO),duration=end-start;
+  var rows=loadEvents();
+  rows.push({id:uuid(),start:start.toISOString(),end:end.toISOString(),durationMs:duration,
+    line:(els.line.value||''),operator:(els.operator.value||''),orderNo:(els.orderNo.value||''),itemNo:(els.itemNo.value||''),
+    reason:stopMeta?stopMeta.reason:null,detailChips:stopMeta?stopMeta.detailChips:[],other:stopMeta?stopMeta.other:'',comment:stopMeta?stopMeta.comment:''});
+  saveEvents(rows); renderTable();
+  setStatus(false); stopStartISO=null; stopMeta=null; if(timer){clearInterval(timer);timer=null;}
+  /* forbliv på Registrering */
+};
+
+/* ===== Historik knapper ===== */
+els.tableBody.onclick=function(e){var t=e.target||e.srcElement;while(t&&t.tagName!=='BUTTON'&&t!==this){t=t.parentNode;}if(!t||t===this)return;var id=t.getAttribute('data-id');var act=t.getAttribute('data-action');var rows=loadEvents();if(act==='delete'){if(!confirm('Slet denne registrering?'))return;var out=[],i;for(i=0;i<rows.length;i++){if(rows[i].id!==id)out.push(rows[i]);}saveEvents(out);renderTable();}else if(act==='edit'){openEdit(id);}};
+
+/* ===== Redigering ===== */
+function fillMachineSelect(sel){sel.innerHTML='';var opts=byId('line').getElementsByTagName('option'),i;for(i=0;i<opts.length;i++){var o=document.createElement('option');o.text=opts[i].text;o.value=opts[i].value||opts[i].text;if(opts[i].disabled)o.disabled=true;sel.appendChild(o);}}
+function toLocalInput(iso){if(!iso)return'';var d=new Date(iso);function p(n){return(n<10?'0':'')+n;}return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+function chipsHtml(chips,sel){var out='',i;for(i=0;i<chips.length;i++){var checked=(sel&&sel.indexOf(chips[i])>-1)?' checked':'';out+='<label class="chip chip-check'+(checked?' selected':'')+'"><input type="checkbox" value="'+chips[i]+'"'+checked+'><span class="txt">'+chips[i]+'</span></label>'; }return out;}
+function openEdit(id){var rows=loadEvents(),i=-1,k;for(k=0;k<rows.length;k++){if(rows[k].id===id){i=k;break;}}if(i<0)return;var ev=rows[i];els.editId.value=ev.id;els.editStart.value=toLocalInput(ev.start);els.editEnd.value=toLocalInput(ev.end);fillMachineSelect(els.editLine);els.editLine.value=ev.line||'';els.editOperator.value=ev.operator||'';els.editOrder.value=ev.orderNo||'';els.editItem.value=ev.itemNo||'';var list=getAllReasons().slice().sort(function(a,b){return a.label.localeCompare(b.label);});els.editReason.innerHTML='';for(k=0;k<list.length;k++){var opt=document.createElement('option');opt.value=list[k].code;opt.text=list[k].code+' — '+list[k].label;els.editReason.appendChild(opt);}var curCode=(ev.reason&&ev.reason.code)||(list[0]&&list[0].code);els.editReason.value=curCode;var chips=(getReasonByCode(curCode)||{chips:[]}).chips||[];els.editChips.innerHTML=chipsHtml(chips, ev.detailChips||[]);els.editOther.value=ev.other||'';els.editComment.value=ev.comment||'';openOv('ov-edit');}
+els.editReason.onchange=function(){var code=els.editReason.value;var chips=(getReasonByCode(code)||{chips:[]}).chips||[];els.editChips.innerHTML=chipsHtml(chips,[]);};
+els.editClose.onclick=function(){closeOv('ov-edit');};
+els.editCancel.onclick=function(){closeOv('ov-edit');};
+els.editSave.onclick=function(){var id=els.editId.value;var rows=loadEvents(),i=-1,k;for(k=0;k<rows.length;k++){if(rows[k].id===id){i=k;break;}}if(i<0)return;var st=new Date(els.editStart.value),en=new Date(els.editEnd.value);if(isNaN(st)||isNaN(en)||en<st){alert('Ugyldig start/slut');return;}var code=els.editReason.value;var r=getReasonByCode(code)||{code:code,label:code};var chips=[],inputs=els.editChips.getElementsByTagName('input'),a;for(a=0;a<inputs.length;a++){if(inputs[a].checked)chips.push(inputs[a].value);}rows[i]={id:rows[i].id,start:st.toISOString(),end:en.toISOString(),durationMs:(en-st),line:els.editLine.value||'',operator:els.editOperator.value||'',orderNo:els.editOrder.value||'',itemNo:els.editItem.value||'',reason:{code:r.code,label:r.label},detailChips:chips,other:els.editOther.value||'',comment:els.editComment.value||''};saveEvents(rows);renderTable();closeOv('ov-edit');};
+
+/* ===== Inputs ===== */
+els.line.onchange=syncLine; els.operator.onkeyup=syncLine;
+els.btnClearLine.onclick=function(){els.line.value='';els.operator.value='';syncLine();};
+els.orderNo.onkeyup=syncOrder; els.itemNo.onkeyup=syncOrder;
+els.btnClearOrder.onclick=function(){els.orderNo.value='';els.itemNo.value='';syncOrder();};
+
+/* ===== Deling ===== */
+els.btnCsv.onclick=function(){var csv=makeCsv(loadEvents());download('produktionsstop.csv',csv);};
+els.btnJson.onclick=function(){var json=JSON.stringify(loadEvents(),null,2);try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(json);alert('JSON kopieret');}else{throw new Error('no clipboard');}}catch(e){prompt('Kopiér JSON:',json);}};
+els.btnClearLog.onclick=function(){if(confirm('Slet hele loggen?')){saveEvents([]);renderTable();}};
+els.btnArchive.onclick=function(){var rows=loadEvents();if(!rows.length){alert('Ingen data at arkivere.');return;}var d=new Date(),y=d.getFullYear(),m=pad(d.getMonth()+1),da=pad(d.getDate()),hh=pad(d.getHours()),mm=pad(d.getMinutes());var name='produktionsstop_'+y+m+da+'_'+hh+mm+'.csv';var csv=makeCsv(rows);download(name,csv);if(confirm('Log blev eksporteret. Vil du nulstille loggen nu?')){saveEvents([]);renderTable();}};
+
+/* ===== Email ===== */
+function defaultEmailSubject(){var line=(els.line.value||''),ord=(els.orderNo.value||'');var d=new Date();var date=d.toLocaleDateString?d.toLocaleDateString('da-DK'):(pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear());return 'Produktionsstop'+(line?' – '+line:'')+(ord?' – Ordre '+ord:'')+' – '+date;}
+els.btnEmail.onclick=function(){var s=loadSettings();els.emailTo.value=s.defaultTo||'M.masiewicz@pluspack.com';els.emailCc.value='';els.emailSubj.value=defaultEmailSubject();els.emailBody.value='Se vedhæftede produktionsstop-log.';els.emailAttach.value='csv';openOv('ov-email');};
+els.emailClose.onclick=function(){closeOv('ov-email');};
+els.emailCancel.onclick=function(){closeOv('ov-email');};
+els.emailSend.onclick=function(){var to=(els.emailTo.value||'').trim();if(!to){alert('Angiv modtager');return;}var attach=els.emailAttach.value;var rows=loadEvents();var filename=(attach==='csv')?'produktionsstop.csv':'produktionsstop.json';var content=(attach==='csv')?makeCsv(rows):JSON.stringify(rows,null,2);download(filename,content);var subj=(els.emailSubj.value||'');var body=(els.emailBody.value||'')+"\n\n(Husk at vedhæfte filen)";var cc=(els.emailCc.value||'');var href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);if(cc)href+='&cc='+encodeURIComponent(cc);window.location.href=href;closeOv('ov-email');};
+
+/* ===== Årsager – indstillinger ===== */
+function renderCustomList(){var s=loadSettings(),list=s.customCauses||[];if(!list.length){els.causeList.innerHTML='<p class="muted">Ingen brugerdefinerede årsager endnu.</p>';return;}var html='<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">Kode</th><th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">Label</th><th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">Chips</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb">Handling</th></tr></thead><tbody>';for(var i=0;i<list.length;i++){html+='<tr><td style="padding:6px;border-bottom:1px solid #e5e7eb">'+list[i].code+'</td><td style="padding:6px;border-bottom:1px solid #e5e7eb">'+list[i].label+'</td><td style="padding:6px;border-bottom:1px solid #e5e7eb">'+(list[i].chips||[]).join(', ')+'</td><td style="padding:6px;border-bottom:1px solid #e5e7eb" class="right"><button class="btn" data-del="'+list[i].code+'">Slet</button></td></tr>'; } html+='</tbody></table>'; els.causeList.innerHTML=html; var buttons=els.causeList.getElementsByTagName('button'),b;for(b=0;b<buttons.length;b++){buttons[b].onclick=function(){var code=this.getAttribute('data-del');var s=loadSettings(),arr=s.customCauses||[],out=[],k;for(k=0;k<arr.length;k++){if(arr[k].code!==code)out.push(arr[k]);}s.customCauses=out;saveSettings(s);renderCustomList();};}}
+function bindAddCause(){function addCauseHandler(){var code=(els.causeCode.value||'').trim().toUpperCase();var label=(els.causeLabel.value||'').trim();var raw=(els.causeChips.value||'').split(','),chips=[],i;for(i=0;i<raw.length;i++){var t=raw[i].trim();if(t)chips.push(t);}if(!code||!label){alert('Udfyld både kode og label');return;}var all=getAllReasons();for(i=0;i<all.length;i++){if((all[i].code||'').toUpperCase()===code){alert('Koden findes allerede. Vælg en anden.');return;}}var s=loadSettings();if(!s.customCauses)s.customCauses=[];s.customCauses.push({code:code,label:label,chips:chips});saveSettings(s);els.causeCode.value='';els.causeLabel.value='';els.causeChips.value='';renderCustomList();if(els.ovStop && els.ovStop.className.indexOf('open')>-1){renderReasonButtons();}alert('Årsag tilføjet');} if(els.btnAddCause.addEventListener){els.btnAddCause.addEventListener('click',addCauseHandler,false);}els.btnAddCause.onclick=addCauseHandler;}
+els.btnResetCauses.onclick=function(){if(confirm('Nulstil egne årsager og statistik?')){var s=loadSettings();s.customCauses=[];s.reasonFreq={};saveSettings(s);renderCustomList();alert('Årsager nulstillet.');}};
+
+/* ===== Settings ===== */
+function applyBrand(){var s=loadSettings();if(s.brandColor){document.documentElement.style.setProperty('--brand',s.brandColor);}els.defTo.value=s.defaultTo||'M.masiewicz@pluspack.com';els.brandColor.value=s.brandColor||'#0b5fa4';if(s.line){els.line.value=s.line;}els.operator.value=s.operator||'';els.orderNo.value=s.orderNo||'';els.itemNo.value=s.itemNo||'';}
+els.btnSaveSettings.onclick=function(){var s=loadSettings();s.defaultTo=(els.defTo.value||'');s.brandColor=(els.brandColor.value||'');saveSettings(s);applyBrand();alert('Indstillinger gemt');};
+
+/* ===== Init ===== */
+function init(){setActiveTab(els.tabReg);setStatus(false);renderTable();applyBrand();renderCustomList();bindAddCause();}
+window.onerror=function(msg,src,line,col){alert('JavaScript-fejl: '+msg+' (linje '+line+')');return false;};
+init();
 </script>
 </body>
 </html>
