@@ -26,7 +26,7 @@
   .actions{display:flex;gap:10px;align-items:center}
   .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--chip);font-size:12px}
   .statusDot{width:10px;height:10px;border-radius:999px;background:#a3a3a3}
-  .btn{border:0;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:600}
+  .btn{border:0;border-radius:10px;padding:11px 12px;cursor:pointer;font-weight:600}
   .btn.secondary{background:#f1f6ff}
   .btn.accent{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
   .btn.ok{background:#e8faf0;border:1px solid #b7e4c7}
@@ -61,11 +61,15 @@
   /* 5S blokke */
   .sblock{position:relative;border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:#fff}
   .sblock::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;border-radius:12px 0 0 12px;background:var(--col)}
-  .srow{display:grid;grid-template-columns:180px 72px 1fr 170px;align-items:center;gap:12px}
+  .srow{display:grid;grid-template-columns:180px 80px 1fr 170px;align-items:center;gap:12px}
+  @media (max-width:720px){
+    .srow{grid-template-columns:1fr;gap:10px}
+    .bubble{width:60px}
+  }
   .title{font-weight:800}
   .bubble{width:48px;height:40px;display:grid;place-items:center;font-weight:800;border:1px solid var(--line);border-radius:10px;background:#f7faff}
-  .step{display:flex;align-items:center;gap:6px}
-  .step button{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:6px;font-weight:800;cursor:pointer}
+  .step{display:flex;align-items:center;gap:8px}
+  .step button{width:32px;height:32px;border:1px solid var(--line);background:#fff;border-radius:10px;font-weight:800;cursor:pointer}
   .sliderWrap{display:flex;align-items:center;gap:8px;width:100%}
   input[type="range"]{-webkit-appearance:none;appearance:none;flex:1;height:10px;border-radius:999px;background:#e6edf7}
   input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 2px 8px rgba(2,6,23,.15)}
@@ -96,6 +100,24 @@
   .modalBody{padding:14px 16px;color:#334155}
   .modalBody strong{color:#b91c1c}
   .modalFoot{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
+
+  /* SØGBAR DROPDOWN (“Hvor”) */
+  .custom-select{position:relative;display:flex;flex-direction:column}
+  .custom-select input{
+    padding:12px;border:1px solid var(--line);border-radius:12px;
+  }
+  .options{
+    position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);
+    border-top:none;border-radius:0 0 12px 12px;max-height:240px;overflow-y:auto;display:none;z-index:20;
+    box-shadow:0 8px 24px rgba(2,6,23,.08);
+  }
+  .options.open{display:block}
+  .options div{padding:10px 12px;cursor:pointer}
+  .options div:hover{background:#f1f5f9}
+  /* bedre touch på mobil */
+  @media (hover:none){
+    .options div{padding:14px 12px}
+  }
 </style>
 </head>
 <body>
@@ -146,7 +168,7 @@
           <div class="card">
             <h3>Observationer (liste)</h3>
             <table>
-              <thead><tr><th style="width:180px">5S</th><th style="width:60%">Beskrivelse</th><th style="width:20%">Billeder</th><th style="width:20%">Handling</th></tr></thead>
+              <thead><tr><th style="width:170px">5S</th><th style="width:60%">Beskrivelse</th><th style="width:20%">Billeder</th><th style="width:20%">Handling</th></tr></thead>
               <tbody id="obsBody"><tr><td colspan="4" style="text-align:center;color:#64748b;padding:16px">Ingen observationer endnu.</td></tr></tbody>
             </table>
           </div>
@@ -182,7 +204,7 @@
       </div>
     </div>
 
-    <!-- KORT-PANEL (zoom fjernet) -->
+    <!-- KORT-PANEL -->
     <div id="mapPanel" class="tab-panel" style="display:none;">
       <div class="grid">
         <div class="card" style="grid-column:1 / -1;">
@@ -203,24 +225,6 @@
 
   </div>
 </div>
-
-<!-- Global datalist til søgbar "Hvor" -->
-<datalist id="locOptions">
-  <option value="Port Alu RV"></option>
-  <option value="Port Alu-Plast RV"></option>
-  <option value="Port Plast RV"></option>
-  <option value="Port ved modtagelsen"></option>
-  <option value="Gang N RV"></option>
-  <option value="Gang M RV"></option>
-  <option value="Gang KL RV"></option>
-  <option value="Gang U RV"></option>
-  <option value="Gang GH RV"></option>
-  <option value="Gang EF RV"></option>
-  <option value="Gang CD RV"></option>
-  <option value="Gang AB RV"></option>
-  <option value="Udpak RV"></option>
-  <option value="Dock RV"></option>
-</datalist>
 
 <!-- Bekræftelses-modal -->
 <div id="confirmModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
@@ -257,7 +261,7 @@ const short=(s)=> (s||'').trim().replace(/\s+/g,' ').slice(0,220)+((s||'').lengt
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function toast(t){ $('#statusTxt').textContent=t; setTimeout(updateTotals,1500); }
 
-/* ===== Komprimering ===== */
+/* ===== Komprimering af billeder ===== */
 function canvasToJpeg(img, maxSidePx, quality){
   const scale = Math.min(1, maxSidePx / Math.max(img.width, img.height));
   const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
@@ -300,45 +304,15 @@ const S5=[
 ];
 const SCORES=Object.fromEntries(S5.map(s=>[s.key,0]));
 let OBS=[];
-const SKEY='pluspack.5s.audit.v14';
-let IS_RESTORING = false;
+const SKEY='pluspack.5s.audit.v15';
+let IS_RESTORING=false;
 
-/* ===== MIGRATION fra v12/v13 ===== */
-const PREV_KEYS = ['pluspack.5s.audit.v13', 'pluspack.5s.audit.v12'];
-function migrateDraftsIfNeeded() {
-  if (localStorage.getItem(SKEY)) return;
-  for (const oldKey of PREV_KEYS) {
-    const raw = localStorage.getItem(oldKey);
-    if (!raw) continue;
-    try {
-      const d = JSON.parse(raw);
-      const meta = d?.meta || {};
-      const scores = d?.scores || {};
-      let observations = Array.isArray(d?.observations) ? d.observations : [];
-      observations = observations.map(o => ({
-        id: o?.id ?? (Date.now()+Math.random()),
-        key: o?.key ?? 'sort',
-        name: o?.name ?? 'Sortér',
-        color: o?.color ?? getCSS('--c-sort'),
-        text: o?.text ?? '',
-        photos: Array.isArray(o?.photos) ? o.photos : [],
-        where: o?.where ?? '',
-        resp:  o?.resp  ?? '',
-        ts: o?.ts ?? new Date().toISOString()
-      }));
-      const sum = Object.values(scores).reduce((a,b)=>a+(+b||0),0);
-      const migratePayload = {
-        meta: { dept: meta.dept || '', name: meta.name || '', date: meta.date || today() },
-        scores,
-        observations,
-        scorePct: Math.round(sum / (5*5) * 100)
-      };
-      localStorage.setItem(SKEY, JSON.stringify(migratePayload));
-      localStorage.removeItem(oldKey);
-      break;
-    } catch(e) { console.warn('Migration fejl for', oldKey, e); }
-  }
-}
+/* ===== Lokationsliste (til søgbar dropdown) ===== */
+const LOCATIONS = [
+  "Port Alu RV","Port Alu-Plast RV","Port Plast RV","Port ved modtagelsen",
+  "Gang N RV","Gang M RV","Gang KL RV","Gang U RV","Gang GH RV",
+  "Gang EF RV","Gang CD RV","Gang AB RV","Udpak RV","Dock RV"
+];
 
 /* ===== Init ===== */
 window.addEventListener('DOMContentLoaded',()=>{
@@ -346,11 +320,11 @@ window.addEventListener('DOMContentLoaded',()=>{
     $('#date').value=today();
     $('#printBtn').addEventListener('click',()=>window.print(),{passive:true});
     buildBlocks(); buildScoreList(); bindEvents();
-    migrateDraftsIfNeeded();
     restore();
     updateTotals();
     $('#statusTxt').textContent='Klar';
 
+    // Tab-skift
     $$('.tab').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         $$('.tab').forEach(t=>t.classList.remove('active'));
@@ -362,8 +336,16 @@ window.addEventListener('DOMContentLoaded',()=>{
       });
     });
 
+    // Radar first draw + on resize
     window.addEventListener('resize', renderRadar, {passive:true});
     renderRadar();
+
+    // Luk dropdowns ved klik udenfor
+    document.addEventListener('click', (e)=>{
+      if(!e.target.closest('.custom-select')){
+        closeAllOptions();
+      }
+    });
   }catch(err){ console.error('Init fejl:',err); $('#statusTxt').textContent='Init-fejl'; }
 });
 
@@ -376,9 +358,9 @@ function buildBlocks(){
       <div class="srow">
         <div class="title" style="color:${s.color}">${s.name}</div>
         <div class="step">
-          <button type="button" data-dec="${s.key}">−</button>
+          <button type="button" aria-label="minus" data-dec="${s.key}">−</button>
           <div class="bubble" id="b-${s.key}">0</div>
-          <button type="button" data-inc="${s.key}">+</button>
+          <button type="button" aria-label="plus" data-inc="${s.key}">+</button>
         </div>
         <div class="sliderWrap">
           <span class="mini">0</span>
@@ -396,8 +378,13 @@ function buildBlocks(){
         <div class="formRow" style="margin-top:8px">
           <div class="field">
             <label for="loc-${s.key}">Hvor</label>
-            <!-- Søgbart med datalist -->
-            <input id="loc-${s.key}" list="locOptions" placeholder="Søg og vælg lokation…" />
+            <div class="custom-select">
+              <input id="loc-${s.key}" placeholder="Søg lokation…" autocomplete="off"
+                     onfocus="openOptions(this)" onclick="openOptions(this)" oninput="filterOptions(this)">
+              <div class="options" id="opts-${s.key}">
+                ${LOCATIONS.map(l=>`<div role="option">${l}</div>`).join('')}
+              </div>
+            </div>
           </div>
           <div class="field">
             <label for="resp-${s.key}">Ansvarlig</label>
@@ -438,10 +425,38 @@ function buildScoreList(){
   });
 }
 
+/* ===== Søgbar dropdown (“Hvor”) ===== */
+function openOptions(input){
+  closeAllOptions();
+  const box = input.nextElementSibling;
+  if(box && box.classList.contains('options')){
+    box.classList.add('open');
+    // klik på valgmulighed
+    box.querySelectorAll('div').forEach(d=>{
+      d.onclick = ()=>{
+        input.value = d.textContent;
+        box.classList.remove('open');
+      };
+    });
+  }
+}
+function closeAllOptions(){
+  $$('.options.open').forEach(b=>b.classList.remove('open'));
+}
+function filterOptions(input){
+  const box = input.nextElementSibling;
+  if(!box) return;
+  const term = input.value.toLowerCase();
+  Array.from(box.children).forEach(opt=>{
+    const show = opt.textContent.toLowerCase().includes(term);
+    opt.style.display = show ? 'block':'none';
+  });
+  if(!box.classList.contains('open')) box.classList.add('open');
+}
+
 /* ===== Radar chart ===== */
 function renderRadar(){
-  const canvas = $('#radar');
-  if(!canvas) return;
+  const canvas = $('#radar'); if(!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const bbox = canvas.getBoundingClientRect();
   canvas.width = Math.floor((bbox.width||360) * dpr);
@@ -512,12 +527,48 @@ function bindEvents(){
     document.querySelector(`[data-cancel="${s.key}"]`)?.addEventListener('click',()=>toggleForm(s.key,false));
     $('#img-'+s.key)?.addEventListener('change',()=>previewThumbs(s.key));
     document.querySelector(`[data-save="${s.key}"]`)?.addEventListener('click',()=>saveObservation(s.key));
+
+    // Aktivér touch-venlig dropdown for “Hvor”
+    const locInput = $('#loc-'+s.key);
+    if(locInput){
+      locInput.addEventListener('focus', ()=>openOptions(locInput));
+      locInput.addEventListener('click', ()=>openOptions(locInput));
+      locInput.addEventListener('input', ()=>filterOptions(locInput));
+    }
   });
   $('#saveBtn')?.addEventListener('click',()=>{saveDraft(); toast('Kladde gemt');});
   $('#clearBtn')?.addEventListener('click',()=>{ if(confirm('Ryd formular og observationer?')){ localStorage.removeItem(SKEY); location.reload(); } });
+
+  // Bekræftelses-modal
   $('#sendBtn')?.addEventListener('click',async ()=>{
     const ok = await showConfirmModal();
     if(ok) sendPayload();
+  });
+}
+
+/* ===== Modal utils ===== */
+function showConfirmModal(){
+  return new Promise(resolve=>{
+    const overlay = $('#confirmModal');
+    const okBtn = $('#confirmOk');
+    const cancelBtn = $('#confirmCancel');
+
+    function close(result){
+      overlay.classList.remove('show');
+      document.removeEventListener('keydown', onKey);
+      okBtn.onclick = cancelBtn.onclick = null;
+      resolve(result);
+    }
+    function onKey(e){
+      if(e.key==='Escape') close(false);
+      if(e.key==='Enter') close(true);
+    }
+
+    okBtn.onclick = ()=>close(true);
+    cancelBtn.onclick = ()=>close(false);
+    overlay.classList.add('show');
+    document.addEventListener('keydown', onKey);
+    setTimeout(()=> okBtn.focus(), 0);
   });
 }
 
@@ -564,20 +615,22 @@ async function saveObservation(key){
     text, where: whereSel, resp: respSel,
     photos, ts:new Date().toISOString()
   });
-  if(ta) ta.value=''; const input=$('#img-'+key); if(input) input.value=''; const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
-  $('#loc-'+key).value=''; $('#resp-'+key).value='';
+  if(ta) ta.value='';
+  const input=$('#img-'+key); if(input) input.value='';
+  const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
+  $('#loc-'+key).value='';
+  $('#resp-'+key).value='';
   toggleForm(key,false); renderObs(); saveDraftSilent();
 }
 function renderObs(){
   const body=$('#obsBody'); if(!body) return; body.innerHTML='';
-  if(!OBS.length){ body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return; }
+  if(!OBS.length){
+    body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return;
+  }
   OBS.forEach((o,i)=>{
     const tr=document.createElement('tr');
-    const chip=`<span class="chip5" style="border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
-    const meta = `
-      <div class="mini" style="margin-top:4px">
-        ${o.where ? `📍 ${escapeHTML(o.where)} · ` : ''}👤 ${escapeHTML(o.resp||'')}
-      </div>`;
+    const chip=`<span class="chip5" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#f6faff;font-weight:700;border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
+    const meta = `<div class="mini" style="margin-top:4px">${o.where ? `📍 ${escapeHTML(o.where)} · ` : ''}👤 ${escapeHTML(o.resp||'')}</div>`;
     const thumbs=o.photos.map(p=>`<img src="${p}" style="height:44px;border:1px solid var(--line);border-radius:8px" alt=""/>`).join('');
     tr.innerHTML=`
       <td>${chip}<div class="mini">${new Date(o.ts).toLocaleString()}</div></td>
@@ -609,44 +662,29 @@ function restore(){
   try{
     const raw=localStorage.getItem(SKEY); if(!raw) return;
     const d=JSON.parse(raw);
-
     IS_RESTORING = true;
-
-    $('#dept').value=d.meta?.dept||''; $('#name').value=d.meta?.name||''; $('#date').value=d.meta?.date||today();
+    $('#dept').value=d.meta?.dept||'';
+    $('#name').value=d.meta?.name||'';
+    $('#date').value=d.meta?.date||today();
     OBS = Array.isArray(d.observations) ? d.observations : [];
     renderObs();
     Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v, {save:false}));
-
     IS_RESTORING = false;
     renderRadar();
   }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; renderRadar(); }
 }
-function toggleForm(key,show){ const f=$('#f-'+key); if(f){ f.style.display=show?'block':'none'; if(show) $('#t-'+key)?.focus(); } }
-
-/* ===== Modal utils ===== */
-function showConfirmModal(){
-  return new Promise(resolve=>{
-    const overlay = $('#confirmModal');
-    const okBtn = $('#confirmOk');
-    const cancelBtn = $('#confirmCancel');
-
-    function close(result){
-      overlay.classList.remove('show');
-      document.removeEventListener('keydown', onKey);
-      okBtn.onclick = cancelBtn.onclick = null;
-      resolve(result);
-    }
-    function onKey(e){
-      if(e.key==='Escape') close(false);
-      if(e.key==='Enter') close(true);
-    }
-
-    okBtn.onclick = ()=>close(true);
-    cancelBtn.onclick = ()=>close(false);
-    overlay.classList.add('show');
-    document.addEventListener('keydown', onKey);
-    setTimeout(()=> okBtn.focus(), 0);
-  });
+function toggleForm(key,show){
+  const f=$('#f-'+key);
+  if(!f) return;
+  f.style.display=show?'block':'none';
+  if(show){
+    $('#t-'+key)?.focus();
+    // Åbn lokationsliste når feltet får fokus
+    const loc=$('#loc-'+key);
+    if(loc){ openOptions(loc); }
+  }else{
+    closeAllOptions();
+  }
 }
 
 /* ===== Send ===== */
