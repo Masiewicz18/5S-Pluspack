@@ -14,11 +14,10 @@
     --overlay:rgba(2,6,23,.45);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:linear-gradient(180deg,#f4f8ff, #fff);color:var(--txt);font:15px/1.6 "Segoe UI",Roboto,system-ui,sans-serif}
+  body{margin:0;background:linear-gradient(180deg,#f4f8ff,#fff);color:var(--txt);font:15px/1.6 "Segoe UI",Roboto,system-ui,sans-serif}
   .wrap{max-width:1440px;margin:24px auto;padding:0 16px}
   .app{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow);overflow:hidden}
 
-  /* Header */
   header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:#fff}
   .brand{display:flex;gap:10px;align-items:center}
   .dotlogo{width:14px;height:14px;border-radius:999px;background:linear-gradient(180deg,var(--accent2),var(--accent))}
@@ -33,21 +32,17 @@
   .btn.ghost{background:#fff;border:1px dashed var(--line)}
   .btn.danger{background:#fee2e2;border:1px solid #fecaca}
 
-  /* Tabs */
   .tabs{display:flex;border-bottom:1px solid var(--line);background:#f8fafc}
   .tab{flex:1;text-align:center;padding:10px 12px;cursor:pointer;font-weight:600;background:transparent;border:none;outline:none;color:var(--muted)}
   .tab.active{color:var(--accent);border-bottom:3px solid var(--accent);background:#fff}
   .tab:hover{background:#f1f5f9}
-  .tab-panel{display:block}
 
-  /* Layout */
   .grid{display:grid;grid-template-columns:2fr 1fr;gap:22px;padding:18px}
   @media (max-width:980px){.grid{grid-template-columns:1fr}}
 
   .card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow)}
   .card h3{margin:0 0 12px;font-weight:700;font-size:16px}
 
-  /* Generelt */
   .formRow{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:14px}
   @media (max-width:1100px){.formRow{grid-template-columns:repeat(2,minmax(220px,1fr))}}
   @media (max-width:720px){.formRow{grid-template-columns:1fr}}
@@ -55,10 +50,8 @@
   label{font-size:13px;color:var(--muted);margin:6px 0 6px}
   input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
   input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.2);outline:0}
-  input[type="date"]{min-width:0}
   textarea{min-height:96px}
 
-  /* 5S blokke */
   .sblock{position:relative;border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:#fff}
   .sblock::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;border-radius:12px 0 0 12px;background:var(--col)}
   .srow{display:grid;grid-template-columns:180px 80px 1fr 170px;align-items:center;gap:12px}
@@ -74,7 +67,6 @@
   .miniBar{height:6px;border-radius:999px;background:#e6edf7;margin-top:6px;overflow:hidden}
   .miniBar>span{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
 
-  /* Score-overblik */
   .scoreCard{position:sticky;top:14px}
   .scoreList{display:flex;flex-direction:column;gap:10px}
   .sitem{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
@@ -84,10 +76,13 @@
   .sex{color:#6b7280;font-size:13px;margin-top:6px}
   .total{margin-top:12px;border:1px solid var(--line);background:#f1f7ff;border-radius:10px;padding:10px;text-align:center;font-weight:800}
 
-  /* Kort-billeder (ingen zoom) */
   .map-img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
 
-  /* Bekræftelses-modal */
+  /* SVG container */
+  #radarBox{width:100%;height:320px}
+  #radarBox svg{width:100%;height:100%;display:block}
+
+  /* Modal */
   .modalOverlay{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
   .modalOverlay.show{display:flex}
   .modalCard{max-width:520px;width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:0 20px 60px rgba(2,6,23,.25);overflow:hidden}
@@ -98,7 +93,7 @@
   .modalBody strong{color:#b91c1c}
   .modalFoot{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
 
-  /* Søgbar dropdown (“Hvor”) */
+  /* Søgbar “Hvor” */
   .custom-select{position:relative;display:flex;flex-direction:column}
   .custom-select input{padding:12px;border:1px solid var(--line);border-radius:12px}
   .options{
@@ -109,7 +104,7 @@
   .options.open{display:block}
   .options div{padding:10px 12px;cursor:pointer}
   .options div:hover{background:#f1f5f9}
-  @media (hover:none){.options div{padding:14px 12px}} /* bedre touch */
+  @media (hover:none){.options div{padding:14px 12px}}
 </style>
 </head>
 <body>
@@ -123,16 +118,13 @@
       </div>
     </header>
 
-    <!-- Tabs -->
     <nav class="tabs">
       <button class="tab active" data-tab="audit">📝 Audit</button>
       <button class="tab" data-tab="map">🗺️ Kort</button>
     </nav>
 
-    <!-- AUDIT-PANEL -->
     <div id="auditPanel" class="tab-panel">
       <div class="grid">
-        <!-- Venstre -->
         <div>
           <div class="card">
             <h3>Generelt</h3>
@@ -172,10 +164,9 @@
           </div>
         </div>
 
-        <!-- Højre -->
         <aside class="card scoreCard">
           <h3>Score-overblik</h3>
-          <canvas id="radar" style="width:100%;height:280px;"></canvas>
+          <div id="radarBox" aria-hidden="false"></div>
           <div id="scoreList" class="scoreList" style="margin-top:10px"></div>
           <div id="totalBox" class="total">Total: 0/25 (0%)</div>
 
@@ -193,7 +184,6 @@
       </div>
     </div>
 
-    <!-- KORT-PANEL -->
     <div id="mapPanel" class="tab-panel" style="display:none;">
       <div class="grid">
         <div class="card" style="grid-column:1 / -1;">
@@ -234,7 +224,7 @@
 <script>
 'use strict';
 
-/* ===== Power Automate endpoints ===== */
+/* ===== Endpoints ===== */
 const ENDPOINT_AUDIT = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c125172796c54698b8f2846f97ff4e0e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=pSjeXn9i7gLQ0cQZuHVsRV6R5iJdqe2v9_VnjhAjfoc";
 const ENDPOINT_OBS   = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/02058f832d784053acb059c0124e3e40/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8GsT2zUZm5FRT6gpsfIKsFw4po8uY53HwaCDhlscahc";
 
@@ -248,7 +238,7 @@ const short=(s)=> (s||'').trim().replace(/\s+/g,' ').slice(0,220)+((s||'').lengt
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function toast(t){ $('#statusTxt').textContent=t; setTimeout(updateTotals,1500); }
 
-/* ===== Billed-komprimering ===== */
+/* ===== Billedkomprimering ===== */
 function canvasToJpeg(img, maxSidePx, quality){
   const scale = Math.min(1, maxSidePx / Math.max(img.width, img.height));
   const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
@@ -289,17 +279,17 @@ const S5=[
 ];
 const SCORES=Object.fromEntries(S5.map(s=>[s.key,0]));
 let OBS=[];
-const SKEY='pluspack.5s.audit.v15';
+const SKEY='pluspack.5s.audit.svgRadar.v1';
 let IS_RESTORING=false;
 
-/* ===== Lokationer til søgbar dropdown ===== */
+/* ===== Lokationer ===== */
 const LOCATIONS = [
   "Port Alu RV","Port Alu-Plast RV","Port Plast RV","Port ved modtagelsen",
   "Gang N RV","Gang M RV","Gang KL RV","Gang U RV","Gang GH RV",
   "Gang EF RV","Gang CD RV","Gang AB RV","Udpak RV","Dock RV"
 ];
 
-/* ===== Build UI ===== */
+/* ===== Byg blokke ===== */
 function buildBlocks(){
   const root=$('#blocks');
   S5.forEach(s=>{
@@ -375,7 +365,7 @@ function buildScoreList(){
   });
 }
 
-/* ===== Søgbar dropdown (“Hvor”) ===== */
+/* ===== Søgbar “Hvor” ===== */
 function openOptions(input){
   closeAllOptions();
   const box = input.nextElementSibling;
@@ -400,87 +390,55 @@ function filterOptions(input){
   if(!box.classList.contains('open')) box.classList.add('open');
 }
 
-/* ===== Radar-graf (robust) ===== */
-function renderRadar() {
-  try {
-    const canvas = document.getElementById('radar');
-    if (!canvas) return;
+/* ===== SVG Radar ===== */
+function renderRadarSVG(){
+  const box = document.getElementById('radarBox');
+  if(!box) return;
+  const W = box.clientWidth || 600;
+  const H = box.clientHeight || 320;
 
-    // Vent til layout er sat første gang
-    if (!renderRadar._laidOutOnce) {
-      renderRadar._laidOutOnce = true;
-      return requestAnimationFrame(renderRadar);
-    }
+  const cx = W/2, cy = H/2 + 8;
+  const radius = Math.min(W,H) * 0.38;
+  const labels = ['Sortér','Systematisér','Rengøring','Standardisér','Fasthold'];
+  const maxVal = 5;
 
-    const dpr = window.devicePixelRatio || 1;
-    const parent = canvas.parentElement || canvas;
-    const parentW = Math.max(parent.clientWidth || 0, 280);
-    const parentH = Math.max(parseInt((canvas.style.height || '280').replace('px',''), 10) || 280, 220);
+  // helper til polarkoordinater
+  const pt = (i, rRatio)=>{
+    const a = (-Math.PI/2) + i * (2*Math.PI/labels.length);
+    return [cx + Math.cos(a)*radius*rRatio, cy + Math.sin(a)*radius*rRatio];
+  };
 
-    canvas.width  = Math.floor(parentW * dpr);
-    canvas.height = Math.floor(parentH * dpr);
+  // grid polygons
+  const rings = Array.from({length:5},(_,r)=> {
+    const ratio = (r+1)/5;
+    return labels.map((_,i)=>pt(i,ratio).join(',')).join(' ');
+  });
 
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr,0,0,dpr);
-    const W = parentW, H = parentH;
+  // data polygon
+  const vals = ['sort','set','shine','std','sus'].map(k=>+SCORES[k]||0);
+  const poly = vals.map((v,i)=>pt(i, v/maxVal).join(',')).join(' ');
 
-    ctx.clearRect(0,0,W,H);
+  // axes lines + labels
+  const axes = labels.map((lbl,i)=>{
+    const [x,y] = pt(i,1);
+    const [lx,ly] = pt(i,1.08);
+    const anchor = Math.abs(Math.cos((-Math.PI/2)+i*2*Math.PI/labels.length))<0.3?'middle':(Math.cos((-Math.PI/2)+i*2*Math.PI/labels.length)>0?'start':'end');
+    const baseline = Math.abs(Math.sin((-Math.PI/2)+i*2*Math.PI/labels.length))<0.3?'middle':(Math.sin((-Math.PI/2)+i*2*Math.PI/labels.length)>0?'hanging':'auto');
+    return `
+      <line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e5eaf0"/>
+      <text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="${baseline}" fill="#334155" font-size="12">${lbl}</text>`;
+  }).join('');
 
-    const labels = ['Sortér','Systematisér','Rengøring','Standardisér','Fasthold'];
-    const getStyle = (v)=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-
-    const cx = W/2, cy = H/2 + 10;
-    const radius = Math.min(W, H) * 0.38;
-    const axes = labels.length, maxVal = 5;
-
-    // grid
-    ctx.strokeStyle = '#e5eaf0';
-    ctx.lineWidth = 1;
-    for(let r=1;r<=5;r++){
-      ctx.beginPath();
-      for(let i=0;i<axes;i++){
-        const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-        const x=cx+Math.cos(a)*radius*(r/5);
-        const y=cy+Math.sin(a)*radius*(r/5);
-        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-      }
-      ctx.closePath(); ctx.stroke();
-    }
-    // axes + labels
-    ctx.font='12px Segoe UI,system-ui';
-    ctx.fillStyle='#334155';
-    for(let i=0;i<axes;i++){
-      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-      const x=cx+Math.cos(a)*radius, y=cy+Math.sin(a)*radius;
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-      const lx=cx+Math.cos(a)*(radius+14), ly=cy+Math.sin(a)*(radius+14);
-      ctx.textAlign=Math.abs(Math.cos(a))<0.3?'center':(Math.cos(a)>0?'left':'right');
-      ctx.textBaseline=Math.abs(Math.sin(a))<0.3?'middle':(Math.sin(a)>0?'top':'bottom');
-      ctx.fillText(labels[i],lx,ly);
-    }
-    // data
-    const vals = ['sort','set','shine','std','sus'].map(k=>+SCORES[k]||0);
-    ctx.beginPath();
-    vals.forEach((v,i)=>{
-      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-      const r=radius*(v/maxVal);
-      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
-    ctx.closePath();
-    ctx.fillStyle='rgba(59,130,246,0.2)'; ctx.fill();
-    ctx.strokeStyle=getStyle('--accent'); ctx.lineWidth=2; ctx.stroke();
-
-    ctx.fillStyle='#fff'; ctx.strokeStyle=getStyle('--accent');
-    vals.forEach((v,i)=>{
-      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-      const r=radius*(v/maxVal);
-      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
-      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-    });
-  } catch (e) {
-    console.error('Radar fejl:', e);
-  }
+  // build svg
+  box.innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-label="5S score radar">
+    <g>
+      ${rings.map(p=>`<polygon points="${p}" fill="none" stroke="#e5eaf0"/>`).join('')}
+      ${axes}
+      <polygon points="${poly}" fill="rgba(59,130,246,0.20)" stroke="${getCSS('--accent')}" stroke-width="2"/>
+      ${vals.map((v,i)=>{const [x,y]=pt(i,v/maxVal);return `<circle cx="${x}" cy="${y}" r="3" fill="#fff" stroke="${getCSS('--accent')}"/>`;}).join('')}
+    </g>
+  </svg>`;
 }
 
 /* ===== Events ===== */
@@ -506,7 +464,7 @@ function bindEvents(){
   $('#sendBtn')?.addEventListener('click',async ()=>{ const ok=await showConfirmModal(); if(ok) sendPayload(); });
 }
 
-/* ===== Modal utils ===== */
+/* ===== Modal ===== */
 function showConfirmModal(){
   return new Promise(resolve=>{
     const overlay = $('#confirmModal');
@@ -541,7 +499,7 @@ function setScore(key,val,{save=true}={}){
   $('#sb-'+key).style.width=(val*20)+'%';
   updateTotals();
   if(save && !IS_RESTORING) saveDraftSilent();
-  renderRadar();
+  renderRadarSVG();
 }
 function previewThumbs(key){
   const c=$('#prev-'+key); if(!c) return; c.innerHTML='';
@@ -568,24 +526,14 @@ async function saveObservation(key){
   const files=$('#img-'+key)?.files||[];
   const photos=await getUpToNCompressed(files,5,350);
   const s=S5.find(x=>x.key===key);
-  OBS.push({
-    id:Date.now()+Math.random(),
-    key, name:s.name, color:s.color,
-    text, where: whereSel, resp: respSel,
-    photos, ts:new Date().toISOString()
-  });
-  if(ta) ta.value='';
-  const input=$('#img-'+key); if(input) input.value='';
-  const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
-  $('#loc-'+key).value='';
-  $('#resp-'+key).value='';
+  OBS.push({id:Date.now()+Math.random(), key, name:s.name, color:s.color, text, where: whereSel, resp: respSel, photos, ts:new Date().toISOString()});
+  if(ta) ta.value=''; const input=$('#img-'+key); if(input) input.value=''; const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
+  $('#loc-'+key).value=''; $('#resp-'+key).value='';
   toggleForm(key,false); renderObs(); saveDraftSilent();
 }
 function renderObs(){
   const body=$('#obsBody'); if(!body) return; body.innerHTML='';
-  if(!OBS.length){
-    body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return;
-  }
+  if(!OBS.length){ body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return; }
   OBS.forEach((o)=>{
     const tr=document.createElement('tr');
     const chip=`<span class="chip5" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#f6faff;font-weight:700;border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
@@ -622,28 +570,15 @@ function restore(){
     const raw=localStorage.getItem(SKEY); if(!raw) return;
     const d=JSON.parse(raw);
     IS_RESTORING = true;
-    $('#dept').value=d.meta?.dept||'';
-    $('#name').value=d.meta?.name||'';
-    $('#date').value=d.meta?.date||today();
+    $('#dept').value=d.meta?.dept||''; $('#name').value=d.meta?.name||''; $('#date').value=d.meta?.date||today();
     OBS = Array.isArray(d.observations) ? d.observations : [];
     renderObs();
     Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v, {save:false}));
     IS_RESTORING = false;
-    renderRadar();
-  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; renderRadar(); }
+    renderRadarSVG();
+  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; renderRadarSVG(); }
 }
-function toggleForm(key,show){
-  const f=$('#f-'+key);
-  if(!f) return;
-  f.style.display=show?'block':'none';
-  if(show){
-    $('#t-'+key)?.focus();
-    const loc=$('#loc-'+key);
-    if(loc){ openOptions(loc); }
-  }else{
-    closeAllOptions();
-  }
-}
+function toggleForm(key,show){ const f=$('#f-'+key); if(f){ f.style.display=show?'block':'none'; if(show) $('#t-'+key)?.focus(); closeAllOptions(); } }
 
 /* ===== Send ===== */
 async function sendPayload(){
@@ -725,7 +660,7 @@ async function sendPayload(){
   }
 }
 
-/* ===== Init (robust) ===== */
+/* ===== Init ===== */
 window.addEventListener('DOMContentLoaded', ()=>{
   try { $('#date').value = today(); } catch(e){}
   try { $('#printBtn').addEventListener('click',()=>window.print(),{passive:true}); } catch(e){}
@@ -745,12 +680,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
       $('#auditPanel').style.display = tab==='audit' ? 'block' : 'none';
       $('#mapPanel').style.display   = tab==='map'   ? 'block' : 'none';
       window.scrollTo({top:0,behavior:'smooth'});
-      if(tab==='audit') requestAnimationFrame(renderRadar);
+      if(tab==='audit') renderRadarSVG();
     });
   });
 
-  requestAnimationFrame(renderRadar);
-  window.addEventListener('resize', ()=>requestAnimationFrame(renderRadar), {passive:true});
+  renderRadarSVG();
+  window.addEventListener('resize', renderRadarSVG, {passive:true});
 
   const stxt = $('#statusTxt'); if (stxt) stxt.textContent = 'Klar';
 });
