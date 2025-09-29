@@ -10,7 +10,7 @@
     --line:#e5eaf0; --chip:#eef6ff; --accent:#3b82f6; --accent2:#06b6d4;
     --ok:#16a34a; --mid:#f59e0b; --bad:#ef4444;
     --c-sort:#3b82f6; --c-set:#06b6d4; --c-shine:#10b981; --c-std:#f59e0b; --c-sus:#8b5cf6;
-    --r-xl:18px; --r-lg:14px; --r-md:12px; --shadow:0 6px 20px rgba(2,6,23,.06);
+    --r-xl:18px; --r-lg:14px; --shadow:0 6px 20px rgba(2,6,23,.06);
     --overlay:rgba(2,6,23,.45);
   }
   *{box-sizing:border-box}
@@ -92,7 +92,13 @@
   .editable{background:#fff8e1}
   .footer{display:flex;gap:10px;justify-content:flex-end;padding:14px;border-top:1px solid var(--line);background:#fff}
 
-  /* Modal (bekræft popup) */
+  /* Kort: zoom-effekt */
+  .zoom-container{overflow:hidden;border:1px solid var(--line);border-radius:12px}
+  .zoom-img{transition:transform .3s ease;max-width:100%;height:auto;display:block}
+  .zoom-container:hover .zoom-img,
+  .zoom-container:active .zoom-img{transform:scale(1.5);cursor:zoom-in}
+
+  /* Bekræftelses-modal */
   .modalOverlay{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
   .modalOverlay.show{display:flex}
   .modalCard{max-width:520px;width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:0 20px 60px rgba(2,6,23,.25);overflow:hidden}
@@ -161,7 +167,6 @@
             <button id="saveBtn" class="btn" type="button">Gem kladde</button>
             <button id="clearBtn" class="btn secondary" type="button">Ryd</button>
             <button id="sendBtn" class="btn accent" type="button">Indsend</button>
-            <a href="https://pluspack.sharepoint.com/sites/healthandsafety/Lists/5S%20Audit/AllItems.aspx" target="_blank" class="btn secondary" style="text-decoration:none">Åbn SharePoint-listen</a>
           </div>
         </div>
 
@@ -190,11 +195,17 @@
       <div class="grid">
         <div class="card" style="grid-column:1 / -1;">
           <h3>5S Walk – Kort</h3>
-          <img
-            src="./TEST.PNG"
-            alt="5S Walk kort"
-            style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;"
-          >
+
+          <!-- Første billede -->
+          <div class="zoom-container">
+            <img src="./TEST.PNG" alt="5S Walk kort" class="zoom-img">
+          </div>
+
+          <!-- Ekstra billede -->
+          <div class="zoom-container" style="margin-top:16px;">
+            <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare" class="zoom-img">
+          </div>
+
           <p style="color:var(--muted);margin-top:8px">
             Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
           </p>
@@ -229,11 +240,11 @@
 <script>
 'use strict';
 
-/* ===== Power Automate endpoints ===== */
+/* ===== Power Automate endpoints (dine) ===== */
 const ENDPOINT_AUDIT = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c125172796c54698b8f2846f97ff4e0e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=pSjeXn9i7gLQ0cQZuHVsRV6R5iJdqe2v9_VnjhAjfoc";
 const ENDPOINT_OBS   = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/02058f832d784053acb059c0124e3e40/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8GsT2zUZm5FRT6gpsfIKsFw4po8uY53HwaCDhlscahc";
 
-/* ===== Mini helpers ===== */
+/* ===== Helpers ===== */
 const $  = (s)=>document.querySelector(s);
 const $$ = (s)=>Array.from(document.querySelectorAll(s));
 const getCSS=(v)=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -271,30 +282,72 @@ async function compressToTargetKB(file, {
 }
 async function getUpToNCompressed(files, maxN=5, targetKB=350){
   const arr=Array.from(files||[]); if(arr.length>maxN) alert(`Der kan kun tilføjes op til ${maxN} billeder. De første ${maxN} bruges.`);
-  const use=arr.slice(0,maxN), out=[]; for(const f of use) out.push(await compressToTargetKB(f,{targetKB})); return out;
+  const use=arr.slice(0,maxN); const out=[];
+  for(const f of use) out.push(await compressToTargetKB(f,{targetKB}));
+  return out;
 }
 
-/* ===== Data ===== */
+/* ===== Data (danske labels) ===== */
 const S5=[
-  {key:'sort',  name:'Sortér (Seiri)',           color:getCSS('--c-sort'), tip:'Fjern overflødige ting. Kun det nødvendige i arbejdsområdet.'},
-  {key:'set',   name:'Systematisér (Seiton)',    color:getCSS('--c-set'),  tip:'Alt har en fast plads, tydelig mærkning og let adgang.'},
-  {key:'shine', name:'Shine/Rengøring (Seiso)',  color:getCSS('--c-shine'),tip:'Daglig rengøring, udstyr og gulv uden snavs/olie.'},
-  {key:'std',   name:'Standardisér (Seiketsu)',  color:getCSS('--c-std'),  tip:'Faste standarder/visualer følges ens i hele området.'},
-  {key:'sus',   name:'Sustain/Fasthold (Shitsuke)',color:getCSS('--c-sus'),tip:'Rutiner efterleves, audit foretages, løbende forbedring.'},
+  {key:'sort',  name:'Sortér',       color:getCSS('--c-sort'), tip:'Fjern overflødige ting. Kun det nødvendige i arbejdsområdet.'},
+  {key:'set',   name:'Systematisér', color:getCSS('--c-set'),  tip:'Alt har en fast plads, tydelig mærkning og let adgang.'},
+  {key:'shine', name:'Rengøring',    color:getCSS('--c-shine'),tip:'Daglig rengøring, udstyr og gulv uden snavs/olie.'},
+  {key:'std',   name:'Standardisér', color:getCSS('--c-std'),  tip:'Faste standarder/visualer følges ens i hele området.'},
+  {key:'sus',   name:'Fasthold',     color:getCSS('--c-sus'),  tip:'Rutiner efterleves, audit foretages, løbende forbedring.'},
 ];
 const SCORES=Object.fromEntries(S5.map(s=>[s.key,0]));
 let OBS=[];
-const SKEY='pluspack.5s.audit.v13';
+const SKEY='pluspack.5s.audit.v14';   // nuværende nøgle
+let IS_RESTORING = false;
+
+/* ===== MIGRATION fra v12/v13 ===== */
+const PREV_KEYS = ['pluspack.5s.audit.v13', 'pluspack.5s.audit.v12'];
+function migrateDraftsIfNeeded() {
+  if (localStorage.getItem(SKEY)) return;
+  for (const oldKey of PREV_KEYS) {
+    const raw = localStorage.getItem(oldKey);
+    if (!raw) continue;
+    try {
+      const d = JSON.parse(raw);
+      const meta = d?.meta || {};
+      const scores = d?.scores || {};
+      let observations = Array.isArray(d?.observations) ? d.observations : [];
+      observations = observations.map(o => ({
+        id: o?.id ?? (Date.now()+Math.random()),
+        key: o?.key ?? 'sort',
+        name: o?.name ?? 'Sortér',
+        color: o?.color ?? getCSS('--c-sort'),
+        text: o?.text ?? '',
+        photos: Array.isArray(o?.photos) ? o.photos : [],
+        where: o?.where ?? '',
+        resp:  o?.resp  ?? '',
+        ts: o?.ts ?? new Date().toISOString()
+      }));
+      const sum = Object.values(scores).reduce((a,b)=>a+(+b||0),0);
+      const migratePayload = {
+        meta: { dept: meta.dept || '', name: meta.name || '', date: meta.date || today() },
+        scores,
+        observations,
+        scorePct: Math.round(sum / (5*5) * 100)
+      };
+      localStorage.setItem(SKEY, JSON.stringify(migratePayload));
+      localStorage.removeItem(oldKey);
+      break;
+    } catch(e) { console.warn('Migration fejl for', oldKey, e); }
+  }
+}
 
 /* ===== Init ===== */
 window.addEventListener('DOMContentLoaded',()=>{
   try{
     $('#date').value=today();
     $('#printBtn').addEventListener('click',()=>window.print(),{passive:true});
-    buildBlocks(); buildScoreList(); bindEvents(); restore(); updateTotals();
+    buildBlocks(); buildScoreList(); bindEvents();
+    migrateDraftsIfNeeded();
+    restore();
+    updateTotals();
     $('#statusTxt').textContent='Klar';
 
-    // Tab-skift
     $$('.tab').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         $$('.tab').forEach(t=>t.classList.remove('active'));
@@ -371,7 +424,7 @@ function buildScoreList(){
   S5.forEach(s=>{
     const row=document.createElement('div'); row.className='sitem';
     row.innerHTML=`
-      <div class="shead"><span style="color:${s.color};font-weight:800">${s.name.split(' ')[0]}</span><span id="sv-${s.key}">0/5</span></div>
+      <div class="shead"><span style="color:${s.color};font-weight:800">${s.name}</span><span id="sv-${s.key}">0/5</span></div>
       <div class="sbar"><span id="sb-${s.key}" style="background:${s.color};width:0%"></span></div>
       <div class="sex">${s.tip}</div>`;
     t.appendChild(row);
@@ -400,7 +453,6 @@ function showConfirmModal(){
     cancelBtn.onclick = ()=>close(false);
     overlay.classList.add('show');
     document.addEventListener('keydown', onKey);
-    // Sæt fokus på OK for hurtig Enter
     setTimeout(()=> okBtn.focus(), 0);
   });
 }
@@ -418,18 +470,22 @@ function bindEvents(){
   });
   $('#saveBtn')?.addEventListener('click',()=>{saveDraft(); toast('Kladde gemt');});
   $('#clearBtn')?.addEventListener('click',()=>{ if(confirm('Ryd formular og observationer?')){ localStorage.removeItem(SKEY); location.reload(); } });
-  $('#sendBtn')?.addEventListener('click',sendPayload);
+  $('#sendBtn')?.addEventListener('click',async ()=>{
+    const ok = await showConfirmModal();
+    if(ok) sendPayload();
+  });
 }
 
 /* ===== Logik ===== */
-function setScore(key,val){
+function setScore(key,val,{save=true}={}){
   SCORES[key]=val;
   $('#b-'+key).textContent=String(val);
   $('#r-'+key).value=String(val);
   $('#mb-'+key).style.width=(val*20)+'%';
   $('#sv-'+key).textContent=`${val}/5`;
   $('#sb-'+key).style.width=(val*20)+'%';
-  updateTotals(); saveDraftSilent();
+  updateTotals();
+  if(save && !IS_RESTORING) saveDraftSilent();
 }
 function previewThumbs(key){
   const c=$('#prev-'+key); if(!c) return; c.innerHTML='';
@@ -449,7 +505,7 @@ function previewThumbs(key){
 async function saveObservation(key){
   const ta=$('#t-'+key);
   const text=(ta?.value||'').trim(); if(!text) return alert('Skriv en observation.');
-  const whereSel = ($('#loc-'+key)?.value||'').trim(); // valgfrit
+  const whereSel = ($('#loc-'+key)?.value||'').trim();
   const respSel  = $('#resp-'+key)?.value || '';
   if(!respSel)  return alert('Vælg ansvarlig.');
 
@@ -462,18 +518,13 @@ async function saveObservation(key){
     text, where: whereSel, resp: respSel,
     photos, ts:new Date().toISOString()
   });
-  if(ta) ta.value='';
-  const input=$('#img-'+key); if(input) input.value='';
-  const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
-  $('#loc-'+key).value='';
-  $('#resp-'+key).value='';
+  if(ta) ta.value=''; const input=$('#img-'+key); if(input) input.value=''; const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
+  $('#loc-'+key).value=''; $('#resp-'+key).value='';
   toggleForm(key,false); renderObs(); saveDraftSilent();
 }
 function renderObs(){
   const body=$('#obsBody'); if(!body) return; body.innerHTML='';
-  if(!OBS.length){
-    body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return;
-  }
+  if(!OBS.length){ body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return; }
   OBS.forEach((o,i)=>{
     const tr=document.createElement('tr');
     const chip=`<span class="chip5" style="border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
@@ -486,68 +537,13 @@ function renderObs(){
       <td>${chip}<div class="mini">${new Date(o.ts).toLocaleString()}</div></td>
       <td>${escapeHTML(short(o.text))}${meta}</td>
       <td><div style="display:flex;gap:6px;flex-wrap:wrap">${thumbs}</div></td>
-      <td><button class="btn secondary" type="button" data-edit="${o.id}">Rediger</button> <button class="btn danger" type="button" data-del="${o.id}">Slet</button></td>`;
+      <td><button class="btn secondary" type="button" data-del="${o.id}">Slet</button></td>`;
     body.appendChild(tr);
   });
   body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{const id=+b.getAttribute('data-del'); OBS=OBS.filter(x=>x.id!==id); renderObs(); saveDraftSilent();}));
-  body.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editRow(+b.getAttribute('data-edit'))));
-}
-function editRow(id){
-  const i=OBS.findIndex(x=>x.id===id); if(i<0) return;
-  const o=OBS[i]; const tr=$('#obsBody').children[i]; tr.classList.add('editable');
-  tr.innerHTML=`
-    <td>
-      <select id="edit-ss">${S5.map(s=>`<option value="${s.key}" ${s.key===o.key?'selected':''}>${s.name}</option>`).join('')}</select>
-      <div class="mini">${new Date(o.ts).toLocaleString()}</div>
-    </td>
-    <td>
-      <textarea id="edit-text" style="min-height:100px">${escapeHTML(o.text)}</textarea>
-      <div class="formRow" style="margin-top:8px">
-        <div class="field">
-          <label>Hvor</label>
-          <input id="edit-where" value="${escapeHTML(o.where||'')}">
-        </div>
-        <div class="field">
-          <label>Ansvarlig</label>
-          <select id="edit-resp">
-            <option ${!o.resp?'selected':''} value="">Vælg…</option>
-            <option ${o.resp==='Jan Ovesen'?'selected':''}>Jan Ovesen</option>
-            <option ${o.resp==='Martin Maximilian'?'selected':''}>Martin Maximilian</option>
-            <option ${o.resp==='Jan Vestergaard Troelsen'?'selected':''}>Jan Vestergaard Troelsen</option>
-            <option ${o.resp==='Bjarke Asferg'?'selected':''}>Bjarke Asferg</option>
-          </select>
-        </div>
-      </div>
-    </td>
-    <td>
-      <div id="edit-photos" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        ${o.photos.map((p,k)=>`<div style="position:relative"><img src="${p}" style="height:44px;border:1px solid var(--line);border-radius:8px"><button data-rem="${k}" title="Fjern" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border:0;border-radius:999px;background:#ef4444;color:#fff;cursor:pointer">×</button></div>`).join('')}
-      </div>
-      <label class="btn ghost" for="edit-files">Tilføj billede(r)</label>
-      <input id="edit-files" type="file" multiple accept="image/*" style="display:none">
-    </td>
-    <td><button class="btn ok" type="button" id="saveRow">Gem</button> <button class="btn" type="button" id="cancelRow">Annullér</button></td>`;
-  $('#edit-files').onchange=async(e)=>{
-    const existing=o.photos||[]; const room=Math.max(0,5-existing.length);
-    if(room<=0){ alert('Maks 5 billeder pr. observation. Slet nogle først.'); return; }
-    const add=await getUpToNCompressed(e.target.files,room,350);
-    o.photos.push(...add); editRow(id);
-  };
-  $('#edit-photos').querySelectorAll('[data-rem]').forEach(btn=>{ btn.onclick=()=>{const k=+btn.getAttribute('data-rem'); o.photos.splice(k,1); editRow(id);}; });
-  $('#saveRow').onclick=()=>{
-    o.key=$('#edit-ss').value;
-    const s=S5.find(x=>x.key===o.key); o.name=s.name; o.color=s.color;
-    o.text=$('#edit-text').value.trim();
-    o.where=$('#edit-where').value.trim();
-    const newResp=$('#edit-resp').value;
-    if(!newResp){ alert('Vælg ansvarlig.'); return; }
-    o.resp=newResp;
-    renderObs(); saveDraftSilent();
-  };
-  $('#cancelRow').onclick=()=>renderObs();
 }
 
-/* ===== State / totals / persistence ===== */
+/* ===== State / persistence ===== */
 function updateTotals(){
   const sum=Object.values(SCORES).reduce((a,b)=>a+b,0), max=5*S5.length, pct=Math.round((sum/max)*100);
   $('#totalBox').textContent=`Total: ${sum}/${max} (${pct}%)`;
@@ -567,18 +563,23 @@ function restore(){
   try{
     const raw=localStorage.getItem(SKEY); if(!raw) return;
     const d=JSON.parse(raw);
+
+    IS_RESTORING = true;
+
     $('#dept').value=d.meta?.dept||''; $('#name').value=d.meta?.name||''; $('#date').value=d.meta?.date||today();
-    Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v));
-    OBS=d.observations||[]; renderObs();
-  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); }
+    OBS = Array.isArray(d.observations) ? d.observations : [];
+    renderObs();
+    Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v, {save:false}));
+
+    IS_RESTORING = false;
+  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; }
 }
 function toggleForm(key,show){ const f=$('#f-'+key); if(f){ f.style.display=show?'block':'none'; if(show) $('#t-'+key)?.focus(); } }
 
-/* ===== Send – 1) Audit, 2) Observationer ===== */
+/* ===== Send ===== */
 async function sendPayload(){
   try{
     $('#statusTxt').textContent='Sender…';
-
     const dept=($('#dept').value||'').trim();
     const name=($('#name').value||'').trim();
     const date=($('#date').value||'').trim();
@@ -586,13 +587,8 @@ async function sendPayload(){
     if(!name) return alert('Skriv Navn');
     if(!date) return alert('Vælg Dato');
 
-    // Designet bekræftelses-popup
-    const ok = await showConfirmModal();
-    if(!ok) return;
-
     const data=collect();
 
-    /* 1) AUDIT → Flow A */
     const auditBody={
       Title:`5S Audit – ${dept} – ${date}`,
       Navn:name, Dato:date, Afdeling:dept,
@@ -605,19 +601,16 @@ async function sendPayload(){
     };
 
     const resAudit=await fetch(ENDPOINT_AUDIT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify(auditBody),
-      mode:'cors'
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify(auditBody), mode:'cors'
     }).catch(err=>{throw new Error('Netværksfejl (Audit): '+err.message);});
 
     const auditTxt=await resAudit.text();
     let auditResp={}; try{ auditResp=auditTxt?JSON.parse(auditTxt):{}; }catch{}
     if(!resAudit.ok){ throw new Error(`Audit-fejl ${resAudit.status}: ${auditTxt||''}`); }
 
-    /* 2) OBSERVATIONER → Flow B */
     const observations=OBS.map((o,i)=>({
-      s:o.name.split(' ')[0],
+      s:o.name,
       beskrivelse:(o.text||'').trim(),
       hvor:o.where||'',
       ansvarlig:o.resp||'',
@@ -653,7 +646,6 @@ async function sendPayload(){
     $('#statusTxt').textContent=`Sendt ✓ — Audit + ${observations.length} obs`;
     alert(`Audit oprettet og ${observations.length} observation(er) oprettet i SharePoint`);
 
-    // Ryd alt efter succes
     localStorage.removeItem(SKEY);
     location.reload();
 
@@ -663,6 +655,14 @@ async function sendPayload(){
     alert(e.message||e);
   }
 }
+
+/* ===== Advarsel ved luk/opdater ===== */
+window.addEventListener('beforeunload', function (e) {
+  if (localStorage.getItem(SKEY)) {
+    e.preventDefault();
+    e.returnValue = 'Du har ikke indsendt audit og observationer. Forlad siden?';
+  }
+});
 </script>
 </body>
 </html>
