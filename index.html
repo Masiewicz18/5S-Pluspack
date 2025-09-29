@@ -11,6 +11,7 @@
     --ok:#16a34a; --mid:#f59e0b; --bad:#ef4444;
     --c-sort:#3b82f6; --c-set:#06b6d4; --c-shine:#10b981; --c-std:#f59e0b; --c-sus:#8b5cf6;
     --r-xl:18px; --r-lg:14px; --r-md:12px; --shadow:0 6px 20px rgba(2,6,23,.06);
+    --overlay:rgba(2,6,23,.45);
   }
   *{box-sizing:border-box}
   body{margin:0;background:linear-gradient(180deg,#f4f8ff, #fff);color:var(--txt);font:15px/1.6 "Segoe UI",Roboto,system-ui,sans-serif}
@@ -30,6 +31,7 @@
   .btn.accent{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
   .btn.ok{background:#e8faf0;border:1px solid #b7e4c7}
   .btn.ghost{background:#fff;border:1px dashed var(--line)}
+  .btn.danger{background:#fee2e2;border:1px solid #fecaca}
 
   /* Tabs */
   .tabs{display:flex;border-bottom:1px solid var(--line);background:#f8fafc}
@@ -89,6 +91,17 @@
   .chip5{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#f6faff;font-weight:700}
   .editable{background:#fff8e1}
   .footer{display:flex;gap:10px;justify-content:flex-end;padding:14px;border-top:1px solid var(--line);background:#fff}
+
+  /* Modal (bekræft popup) */
+  .modalOverlay{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
+  .modalOverlay.show{display:flex}
+  .modalCard{max-width:520px;width:100%;background:#fff;border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:0 20px 60px rgba(2,6,23,.25);overflow:hidden}
+  .modalHead{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#f8fbff,#fff)}
+  .modalIcon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#fff5f5;border:1px solid #fecaca;font-weight:900;color:#b91c1c}
+  .modalTitle{margin:0;font-weight:800;font-size:16px}
+  .modalBody{padding:14px 16px;color:#334155}
+  .modalBody strong{color:#b91c1c}
+  .modalFoot{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
 </style>
 </head>
 <body>
@@ -172,64 +185,53 @@
       </div>
     </div>
 
-<!-- KORT-PANEL -->
-<div id="mapPanel" class="tab-panel" style="display:none;">
-  <div class="grid">
-    <div class="card" style="grid-column:1 / -1;">
-      <h3>5S Walk – Kort</h3>
-
-      <!-- Lokalt billede fra repo'et -->
-      <img
-        src="./TEST.PNG"
-        alt="5S Walk kort"
-        style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;"
-      >
-
-      <p style="color:var(--muted);margin-top:8px">
-        Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
-      </p>
-
-      <div class="card" style="margin-top:10px;background:#f8fafc">
-        <b>Tip:</b> Notér observationer i rækkefølgen 1–9 mens du går ruten for at undgå huller og dobbeltarbejde.
+    <!-- KORT-PANEL -->
+    <div id="mapPanel" class="tab-panel" style="display:none;">
+      <div class="grid">
+        <div class="card" style="grid-column:1 / -1;">
+          <h3>5S Walk – Kort</h3>
+          <img
+            src="./TEST.PNG"
+            alt="5S Walk kort"
+            style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;"
+          >
+          <p style="color:var(--muted);margin-top:8px">
+            Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
+          </p>
+          <div class="card" style="margin-top:10px;background:#f8fafc">
+            <b>Tip:</b> Notér observationer i rækkefølgen 1–9 mens du går ruten for at undgå huller og dobbeltarbejde.
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
-    
-<div id="mapPanel" class="tab-panel" style="display:none;">
-  <div class="grid">
-    <div class="card" style="grid-column:1 / -1;">
-      <h3>5S Walk – Kort</h3>
-
-      <!-- Lokalt billede fra repo'et -->
-      <img
-        src="./TEST.PNG"
-        alt="5S Walk kort"
-        style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;"
-      >
-
-      <p style="color:var(--muted);margin-top:8px">
-        Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
-      </p>
-
-      <div class="card" style="margin-top:10px;background:#f8fafc">
-        <b>Tip:</b> Notér observationer i rækkefølgen 1–9 mens du går ruten for at undgå huller og dobbeltarbejde.
-      </div>
+<!-- Bekræftelses-modal -->
+<div id="confirmModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
+  <div class="modalCard">
+    <div class="modalHead">
+      <div class="modalIcon">!</div>
+      <h3 id="confirmTitle" class="modalTitle">Indsend 5S Audit?</h3>
+    </div>
+    <div class="modalBody" id="confirmDesc">
+      <p><strong>Bemærk:</strong> Når du indsender, bliver auditten oprettet og observationer sendt til SharePoint.</p>
+      <p>Er du helt sikker på, at alt er korrekt udfyldt?</p>
+    </div>
+    <div class="modalFoot">
+      <button id="confirmCancel" class="btn secondary" type="button">Annullér</button>
+      <button id="confirmOk" class="btn accent" type="button">Ja, indsend</button>
     </div>
   </div>
 </div>
-
 
 <script>
 'use strict';
 
 /* ===== Power Automate endpoints ===== */
-// A) AUDIT-flow (din URL – uændret)
 const ENDPOINT_AUDIT = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c125172796c54698b8f2846f97ff4e0e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=pSjeXn9i7gLQ0cQZuHVsRV6R5iJdqe2v9_VnjhAjfoc";
-
-// B) OBSERVATIONER-flow (NY URL – sat som ønsket)
-const ENDPOINT_OBS = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/02058f832d784053acb059c0124e3e40/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8GsT2zUZm5FRT6gpsfIKsFw4po8uY53HwaCDhlscahc";
+const ENDPOINT_OBS   = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/02058f832d784053acb059c0124e3e40/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8GsT2zUZm5FRT6gpsfIKsFw4po8uY53HwaCDhlscahc";
 
 /* ===== Mini helpers ===== */
 const $  = (s)=>document.querySelector(s);
@@ -241,14 +243,12 @@ const short=(s)=> (s||'').trim().replace(/\s+/g,' ').slice(0,220)+((s||'').lengt
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function toast(t){ $('#statusTxt').textContent=t; setTimeout(updateTotals,1500); }
 
-/* ===== Adaptiv JPEG-komprimering ===== */
+/* ===== Komprimering ===== */
 function canvasToJpeg(img, maxSidePx, quality){
   const scale = Math.min(1, maxSidePx / Math.max(img.width, img.height));
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
+  const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
   const c = document.createElement('canvas'); c.width = w; c.height = h;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(img, 0, 0, w, h);
+  const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
   return c.toDataURL('image/jpeg', quality);
 }
 async function compressToTargetKB(file, {
@@ -258,28 +258,20 @@ async function compressToTargetKB(file, {
     const fr = new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file);
   });
   const img = await new Promise((res, rej) => { const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=dataUrl; });
-
-  let q=startQuality, side=startMaxSide;
-  let out=canvasToJpeg(img, side, q);
-
+  let q=startQuality, side=startMaxSide, out=canvasToJpeg(img, side, q);
   const sizeKB = (d)=>Math.round((d.length - d.indexOf(',') - 1)*3/4/1024);
   let kb=sizeKB(out), guard=0;
   while(kb>targetKB && guard++<8){
     if(q>minQuality) q=Math.max(minQuality, q-0.1);
     else if(side>minSide) side=Math.max(minSide, Math.round(side*0.85));
     else break;
-    out=canvasToJpeg(img, side, q);
-    kb=sizeKB(out);
+    out=canvasToJpeg(img, side, q); kb=sizeKB(out);
   }
   return out;
 }
 async function getUpToNCompressed(files, maxN=5, targetKB=350){
-  const arr=Array.from(files||[]);
-  if(arr.length>maxN) alert(`Der kan kun tilføjes op til ${maxN} billeder. De første ${maxN} bruges.`);
-  const use=arr.slice(0,maxN);
-  const out=[];
-  for(const f of use) out.push(await compressToTargetKB(f,{targetKB}));
-  return out;
+  const arr=Array.from(files||[]); if(arr.length>maxN) alert(`Der kan kun tilføjes op til ${maxN} billeder. De første ${maxN} bruges.`);
+  const use=arr.slice(0,maxN), out=[]; for(const f of use) out.push(await compressToTargetKB(f,{targetKB})); return out;
 }
 
 /* ===== Data ===== */
@@ -292,7 +284,7 @@ const S5=[
 ];
 const SCORES=Object.fromEntries(S5.map(s=>[s.key,0]));
 let OBS=[];
-const SKEY='pluspack.5s.audit.v12';
+const SKEY='pluspack.5s.audit.v13';
 
 /* ===== Init ===== */
 window.addEventListener('DOMContentLoaded',()=>{
@@ -313,7 +305,6 @@ window.addEventListener('DOMContentLoaded',()=>{
         window.scrollTo({top:0,behavior:'smooth'});
       });
     });
-
   }catch(err){ console.error('Init fejl:',err); $('#statusTxt').textContent='Init-fejl'; }
 });
 
@@ -342,12 +333,31 @@ function buildBlocks(){
       <div id="f-${s.key}" style="display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px">
         <label for="t-${s.key}">Observation</label>
         <textarea id="t-${s.key}" placeholder="Skriv observation…"></textarea>
+
+        <div class="formRow" style="margin-top:8px">
+          <div class="field">
+            <label for="loc-${s.key}">Hvor</label>
+            <input id="loc-${s.key}" placeholder="Fx ved maskine A15 / gang 2" />
+          </div>
+          <div class="field">
+            <label for="resp-${s.key}">Ansvarlig</label>
+            <select id="resp-${s.key}">
+              <option value="" disabled selected>Vælg…</option>
+              <option>Jan Ovesen</option>
+              <option>Martin Maximilian</option>
+              <option>Jan Vestergaard Troelsen</option>
+              <option>Bjarke Asferg</option>
+            </select>
+          </div>
+        </div>
+
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
           <label class="btn ghost" for="img-${s.key}">Tilføj billede(r)</label>
           <input id="img-${s.key}" type="file" accept="image/*" multiple style="display:none">
           <div id="prev-${s.key}" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           <span class="mini" style="margin-left:auto">Valgfrit · maks 5 billeder</span>
         </div>
+
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
           <button class="btn ok" type="button" data-save="${s.key}">Gem observation</button>
           <button class="btn" type="button" data-cancel="${s.key}">Annullér</button>
@@ -365,6 +375,33 @@ function buildScoreList(){
       <div class="sbar"><span id="sb-${s.key}" style="background:${s.color};width:0%"></span></div>
       <div class="sex">${s.tip}</div>`;
     t.appendChild(row);
+  });
+}
+
+/* ===== Modal utils ===== */
+function showConfirmModal(){
+  return new Promise(resolve=>{
+    const overlay = $('#confirmModal');
+    const okBtn = $('#confirmOk');
+    const cancelBtn = $('#confirmCancel');
+
+    function close(result){
+      overlay.classList.remove('show');
+      document.removeEventListener('keydown', onKey);
+      okBtn.onclick = cancelBtn.onclick = null;
+      resolve(result);
+    }
+    function onKey(e){
+      if(e.key==='Escape') close(false);
+      if(e.key==='Enter') close(true);
+    }
+
+    okBtn.onclick = ()=>close(true);
+    cancelBtn.onclick = ()=>close(false);
+    overlay.classList.add('show');
+    document.addEventListener('keydown', onKey);
+    // Sæt fokus på OK for hurtig Enter
+    setTimeout(()=> okBtn.focus(), 0);
   });
 }
 
@@ -412,23 +449,42 @@ function previewThumbs(key){
 async function saveObservation(key){
   const ta=$('#t-'+key);
   const text=(ta?.value||'').trim(); if(!text) return alert('Skriv en observation.');
+  const whereSel = ($('#loc-'+key)?.value||'').trim(); // valgfrit
+  const respSel  = $('#resp-'+key)?.value || '';
+  if(!respSel)  return alert('Vælg ansvarlig.');
+
   const files=$('#img-'+key)?.files||[];
   const photos=await getUpToNCompressed(files,5,350);
   const s=S5.find(x=>x.key===key);
-  OBS.push({id:Date.now()+Math.random(), key, name:s.name, color:s.color, text, photos, ts:new Date().toISOString()});
-  if(ta) ta.value=''; const input=$('#img-'+key); if(input) input.value=''; const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
+  OBS.push({
+    id:Date.now()+Math.random(),
+    key, name:s.name, color:s.color,
+    text, where: whereSel, resp: respSel,
+    photos, ts:new Date().toISOString()
+  });
+  if(ta) ta.value='';
+  const input=$('#img-'+key); if(input) input.value='';
+  const prev=$('#prev-'+key); if(prev) prev.innerHTML='';
+  $('#loc-'+key).value='';
+  $('#resp-'+key).value='';
   toggleForm(key,false); renderObs(); saveDraftSilent();
 }
 function renderObs(){
   const body=$('#obsBody'); if(!body) return; body.innerHTML='';
-  if(!OBS.length){ body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return; }
+  if(!OBS.length){
+    body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return;
+  }
   OBS.forEach((o,i)=>{
     const tr=document.createElement('tr');
     const chip=`<span class="chip5" style="border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
+    const meta = `
+      <div class="mini" style="margin-top:4px">
+        ${o.where ? `📍 ${escapeHTML(o.where)} · ` : ''}👤 ${escapeHTML(o.resp||'')}
+      </div>`;
     const thumbs=o.photos.map(p=>`<img src="${p}" style="height:44px;border:1px solid var(--line);border-radius:8px" alt=""/>`).join('');
     tr.innerHTML=`
       <td>${chip}<div class="mini">${new Date(o.ts).toLocaleString()}</div></td>
-      <td>${escapeHTML(short(o.text))}</td>
+      <td>${escapeHTML(short(o.text))}${meta}</td>
       <td><div style="display:flex;gap:6px;flex-wrap:wrap">${thumbs}</div></td>
       <td><button class="btn secondary" type="button" data-edit="${o.id}">Rediger</button> <button class="btn danger" type="button" data-del="${o.id}">Slet</button></td>`;
     body.appendChild(tr);
@@ -444,7 +500,25 @@ function editRow(id){
       <select id="edit-ss">${S5.map(s=>`<option value="${s.key}" ${s.key===o.key?'selected':''}>${s.name}</option>`).join('')}</select>
       <div class="mini">${new Date(o.ts).toLocaleString()}</div>
     </td>
-    <td><textarea id="edit-text" style="min-height:100px">${escapeHTML(o.text)}</textarea></td>
+    <td>
+      <textarea id="edit-text" style="min-height:100px">${escapeHTML(o.text)}</textarea>
+      <div class="formRow" style="margin-top:8px">
+        <div class="field">
+          <label>Hvor</label>
+          <input id="edit-where" value="${escapeHTML(o.where||'')}">
+        </div>
+        <div class="field">
+          <label>Ansvarlig</label>
+          <select id="edit-resp">
+            <option ${!o.resp?'selected':''} value="">Vælg…</option>
+            <option ${o.resp==='Jan Ovesen'?'selected':''}>Jan Ovesen</option>
+            <option ${o.resp==='Martin Maximilian'?'selected':''}>Martin Maximilian</option>
+            <option ${o.resp==='Jan Vestergaard Troelsen'?'selected':''}>Jan Vestergaard Troelsen</option>
+            <option ${o.resp==='Bjarke Asferg'?'selected':''}>Bjarke Asferg</option>
+          </select>
+        </div>
+      </div>
+    </td>
     <td>
       <div id="edit-photos" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
         ${o.photos.map((p,k)=>`<div style="position:relative"><img src="${p}" style="height:44px;border:1px solid var(--line);border-radius:8px"><button data-rem="${k}" title="Fjern" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border:0;border-radius:999px;background:#ef4444;color:#fff;cursor:pointer">×</button></div>`).join('')}
@@ -460,7 +534,16 @@ function editRow(id){
     o.photos.push(...add); editRow(id);
   };
   $('#edit-photos').querySelectorAll('[data-rem]').forEach(btn=>{ btn.onclick=()=>{const k=+btn.getAttribute('data-rem'); o.photos.splice(k,1); editRow(id);}; });
-  $('#saveRow').onclick=()=>{ o.key=$('#edit-ss').value; const s=S5.find(x=>x.key===o.key); o.name=s.name; o.color=s.color; o.text=$('#edit-text').value.trim(); renderObs(); saveDraftSilent(); };
+  $('#saveRow').onclick=()=>{
+    o.key=$('#edit-ss').value;
+    const s=S5.find(x=>x.key===o.key); o.name=s.name; o.color=s.color;
+    o.text=$('#edit-text').value.trim();
+    o.where=$('#edit-where').value.trim();
+    const newResp=$('#edit-resp').value;
+    if(!newResp){ alert('Vælg ansvarlig.'); return; }
+    o.resp=newResp;
+    renderObs(); saveDraftSilent();
+  };
   $('#cancelRow').onclick=()=>renderObs();
 }
 
@@ -503,6 +586,10 @@ async function sendPayload(){
     if(!name) return alert('Skriv Navn');
     if(!date) return alert('Vælg Dato');
 
+    // Designet bekræftelses-popup
+    const ok = await showConfirmModal();
+    if(!ok) return;
+
     const data=collect();
 
     /* 1) AUDIT → Flow A */
@@ -532,11 +619,11 @@ async function sendPayload(){
     const observations=OBS.map((o,i)=>({
       s:o.name.split(' ')[0],
       beskrivelse:(o.text||'').trim(),
-      hvor:'',
+      hvor:o.where||'',
+      ansvarlig:o.resp||'',
       handling:'',
       forfaldsdato:'',
       status:'Afventer status',
-      ansvarlig:name,
       images:(o.photos||[]).map((b64,k)=>({fileName:`obs_${i+1}_${k+1}.jpg`, dataUrl:b64}))
     }));
 
@@ -566,6 +653,10 @@ async function sendPayload(){
     $('#statusTxt').textContent=`Sendt ✓ — Audit + ${observations.length} obs`;
     alert(`Audit oprettet og ${observations.length} observation(er) oprettet i SharePoint`);
 
+    // Ryd alt efter succes
+    localStorage.removeItem(SKEY);
+    location.reload();
+
   }catch(e){
     console.error(e);
     $('#statusTxt').textContent='Fejl ved indsending';
@@ -575,5 +666,3 @@ async function sendPayload(){
 </script>
 </body>
 </html>
-
-
