@@ -83,6 +83,9 @@
   .sex{color:#6b7280;font-size:13px;margin-top:6px}
   .total{margin-top:12px;border:1px solid var(--line);background:#f1f7ff;border-radius:10px;padding:10px;text-align:center;font-weight:800}
 
+  /* Kort-billeder (uden zoom) */
+  .map-img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+
   /* Bekræftelses-modal */
   .modalOverlay{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
   .modalOverlay.show{display:flex}
@@ -160,9 +163,9 @@
           <h3>Score-overblik</h3>
 
           <!-- Radar-graf -->
-          <canvas id="radar" width="360" height="300" style="width:100%;max-width:460px;height:auto;display:block;margin:0 auto 12px auto;border:1px solid var(--line);border-radius:12px;background:#fff"></canvas>
+          <canvas id="radar" style="width:100%;height:280px;"></canvas>
 
-          <div id="scoreList" class="scoreList"></div>
+          <div id="scoreList" class="scoreList" style="margin-top:10px"></div>
           <div id="totalBox" class="total">Total: 0/25 (0%)</div>
 
           <div class="card" style="margin-top:10px">
@@ -185,11 +188,8 @@
         <div class="card" style="grid-column:1 / -1;">
           <h3>5S Walk – Kort</h3>
 
-          <img src="./TEST.PNG" alt="5S Walk kort"
-               style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block">
-
-          <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare"
-               style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;margin-top:16px;display:block">
+          <img src="./TEST.PNG" alt="5S Walk kort" class="map-img">
+          <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare" class="map-img" style="margin-top:16px;">
 
           <p style="color:var(--muted);margin-top:8px">
             Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
@@ -203,6 +203,24 @@
 
   </div>
 </div>
+
+<!-- Global datalist til søgbar "Hvor" -->
+<datalist id="locOptions">
+  <option value="Port Alu RV"></option>
+  <option value="Port Alu-Plast RV"></option>
+  <option value="Port Plast RV"></option>
+  <option value="Port ved modtagelsen"></option>
+  <option value="Gang N RV"></option>
+  <option value="Gang M RV"></option>
+  <option value="Gang KL RV"></option>
+  <option value="Gang U RV"></option>
+  <option value="Gang GH RV"></option>
+  <option value="Gang EF RV"></option>
+  <option value="Gang CD RV"></option>
+  <option value="Gang AB RV"></option>
+  <option value="Udpak RV"></option>
+  <option value="Dock RV"></option>
+</datalist>
 
 <!-- Bekræftelses-modal -->
 <div id="confirmModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
@@ -344,9 +362,8 @@ window.addEventListener('DOMContentLoaded',()=>{
       });
     });
 
-    // første tegning af radar og responsiv redraw
-    drawRadar();
-    window.addEventListener('resize', drawRadar);
+    window.addEventListener('resize', renderRadar, {passive:true});
+    renderRadar();
   }catch(err){ console.error('Init fejl:',err); $('#statusTxt').textContent='Init-fejl'; }
 });
 
@@ -379,7 +396,8 @@ function buildBlocks(){
         <div class="formRow" style="margin-top:8px">
           <div class="field">
             <label for="loc-${s.key}">Hvor</label>
-            <input id="loc-${s.key}" placeholder="Fx ved maskine A15 / gang 2" />
+            <!-- Søgbart med datalist -->
+            <input id="loc-${s.key}" list="locOptions" placeholder="Søg og vælg lokation…" />
           </div>
           <div class="field">
             <label for="resp-${s.key}">Ansvarlig</label>
@@ -420,99 +438,67 @@ function buildScoreList(){
   });
 }
 
-/* ===== Radar-graf ===== */
-function drawRadar(){
-  const canvas = document.getElementById('radar');
+/* ===== Radar chart ===== */
+function renderRadar(){
+  const canvas = $('#radar');
   if(!canvas) return;
-
-  // responsiv skalering
-  const parentW = canvas.parentElement.clientWidth;
-  const cssW = Math.min(500, Math.max(260, parentW-32));
-  const cssH = Math.round(cssW * 0.75);
-
   const dpr = window.devicePixelRatio || 1;
-  canvas.style.width = cssW+'px';
-  canvas.style.height = cssH+'px';
-  canvas.width  = Math.floor(cssW*dpr);
-  canvas.height = Math.floor(cssH*dpr);
-
+  const bbox = canvas.getBoundingClientRect();
+  canvas.width = Math.floor((bbox.width||360) * dpr);
+  canvas.height = Math.floor((bbox.height||280) * dpr);
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0); // så vi kan tegne i CSS-px
+  ctx.setTransform(dpr,0,0,dpr);
+  const W = bbox.width || 360, H = bbox.height || 280;
+  ctx.clearRect(0,0,W,H);
 
-  // setup
-  const w = cssW, h = cssH;
-  ctx.clearRect(0,0,w,h);
-  const cx = w/2, cy = h/2 + 10;
-  const radius = Math.min(w,h)/2 - 28;
-  const axes = S5.map(s=>s.name);
-  const maxVal = 5;
+  const cx = W/2, cy = H/2 + 10;
+  const radius = Math.min(W, H) * 0.38;
+  const axes = S5.length, maxVal = 5;
 
-  // baggrund skalaer (koncentriske polygoner)
-  const levels = 5;
+  // grid
+  ctx.strokeStyle = '#e5eaf0';
   ctx.lineWidth = 1;
-  for(let l=1; l<=levels; l++){
-    const r = radius * (l/levels);
+  for(let r=1;r<=5;r++){
     ctx.beginPath();
-    axes.forEach((_,i)=>{
-      const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
-      const x = cx + r*Math.cos(ang);
-      const y = cy + r*Math.sin(ang);
-      (i===0)?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
-    ctx.closePath();
-    ctx.strokeStyle = '#e6edf7';
-    ctx.stroke();
+    for(let i=0;i<axes;i++){
+      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+      const x=cx+Math.cos(a)*radius*(r/5);
+      const y=cy+Math.sin(a)*radius*(r/5);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
   }
-
-  // akser + labels
-  ctx.font = '12px Segoe UI, Roboto, system-ui, sans-serif';
-  ctx.fillStyle = '#475569';
-  ctx.strokeStyle = '#e6edf7';
-  axes.forEach((label,i)=>{
-    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
-    const x = cx + radius*Math.cos(ang);
-    const y = cy + radius*Math.sin(ang);
-    // akse
+  // axes + labels
+  ctx.font='12px Segoe UI,system-ui';
+  ctx.fillStyle='#334155';
+  for(let i=0;i<axes;i++){
+    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+    const x=cx+Math.cos(a)*radius, y=cy+Math.sin(a)*radius;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-    // label
-    const lx = cx + (radius+10)*Math.cos(ang);
-    const ly = cy + (radius+10)*Math.sin(ang);
-    ctx.textAlign = Math.cos(ang) > 0.1 ? 'left' : (Math.cos(ang) < -0.1 ? 'right' : 'center');
-    ctx.textBaseline = Math.sin(ang) > 0.1 ? 'top' : (Math.sin(ang) < -0.1 ? 'bottom' : 'middle');
-    ctx.fillText(label, lx, ly);
-  });
-
-  // data polygon
-  const vals = [SCORES.sort, SCORES.set, SCORES.shine, SCORES.std, SCORES.sus].map(v=>Number(v||0));
+    const lx=cx+Math.cos(a)*(radius+14), ly=cy+Math.sin(a)*(radius+14);
+    ctx.textAlign=Math.abs(Math.cos(a))<0.3?'center':(Math.cos(a)>0?'left':'right');
+    ctx.textBaseline=Math.abs(Math.sin(a))<0.3?'middle':(Math.sin(a)>0?'top':'bottom');
+    ctx.fillText(S5[i].name,lx,ly);
+  }
+  // data
+  const vals=S5.map(s=>+SCORES[s.key]||0);
   ctx.beginPath();
   vals.forEach((v,i)=>{
-    const t = clamp(v,0,maxVal)/maxVal;
-    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
-    const x = cx + (radius*t)*Math.cos(ang);
-    const y = cy + (radius*t)*Math.sin(ang);
-    (i===0)?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+    const r=radius*(v/maxVal);
+    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   });
   ctx.closePath();
-  // fyld
-  const grd = ctx.createLinearGradient(0,cy-radius,0,cy+radius);
-  grd.addColorStop(0,'rgba(59,130,246,.18)');  // accent
-  grd.addColorStop(1,'rgba(6,182,212,.18)');   // accent2
-  ctx.fillStyle = grd;
-  ctx.fill();
-  // kant
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(59,130,246,.8)';
-  ctx.stroke();
+  ctx.fillStyle='rgba(59,130,246,0.2)'; ctx.fill();
+  ctx.strokeStyle=getCSS('--accent'); ctx.lineWidth=2; ctx.stroke();
 
-  // knudepunkter
-  ctx.fillStyle = '#fff';
-  ctx.strokeStyle = 'rgba(59,130,246,.9)';
+  ctx.fillStyle='#fff'; ctx.strokeStyle=getCSS('--accent');
   vals.forEach((v,i)=>{
-    const t = clamp(v,0,maxVal)/maxVal;
-    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
-    const x = cx + (radius*t)*Math.cos(ang);
-    const y = cy + (radius*t)*Math.sin(ang);
-    ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+    const r=radius*(v/maxVal);
+    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.stroke();
   });
 }
 
@@ -535,32 +521,6 @@ function bindEvents(){
   });
 }
 
-/* ===== Modal utils ===== */
-function showConfirmModal(){
-  return new Promise(resolve=>{
-    const overlay = $('#confirmModal');
-    const okBtn = $('#confirmOk');
-    const cancelBtn = $('#confirmCancel');
-
-    function close(result){
-      overlay.classList.remove('show');
-      document.removeEventListener('keydown', onKey);
-      okBtn.onclick = cancelBtn.onclick = null;
-      resolve(result);
-    }
-    function onKey(e){
-      if(e.key==='Escape') close(false);
-      if(e.key==='Enter') close(true);
-    }
-
-    okBtn.onclick = ()=>close(true);
-    cancelBtn.onclick = ()=>close(false);
-    overlay.classList.add('show');
-    document.addEventListener('keydown', onKey);
-    setTimeout(()=> okBtn.focus(), 0);
-  });
-}
-
 /* ===== Logik ===== */
 function setScore(key,val,{save=true}={}){
   SCORES[key]=val;
@@ -571,7 +531,7 @@ function setScore(key,val,{save=true}={}){
   $('#sb-'+key).style.width=(val*20)+'%';
   updateTotals();
   if(save && !IS_RESTORING) saveDraftSilent();
-  drawRadar(); // opdatér grafen
+  renderRadar();
 }
 function previewThumbs(key){
   const c=$('#prev-'+key); if(!c) return; c.innerHTML='';
@@ -658,10 +618,36 @@ function restore(){
     Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v, {save:false}));
 
     IS_RESTORING = false;
-    drawRadar();
-  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; }
+    renderRadar();
+  }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; renderRadar(); }
 }
 function toggleForm(key,show){ const f=$('#f-'+key); if(f){ f.style.display=show?'block':'none'; if(show) $('#t-'+key)?.focus(); } }
+
+/* ===== Modal utils ===== */
+function showConfirmModal(){
+  return new Promise(resolve=>{
+    const overlay = $('#confirmModal');
+    const okBtn = $('#confirmOk');
+    const cancelBtn = $('#confirmCancel');
+
+    function close(result){
+      overlay.classList.remove('show');
+      document.removeEventListener('keydown', onKey);
+      okBtn.onclick = cancelBtn.onclick = null;
+      resolve(result);
+    }
+    function onKey(e){
+      if(e.key==='Escape') close(false);
+      if(e.key==='Enter') close(true);
+    }
+
+    okBtn.onclick = ()=>close(true);
+    cancelBtn.onclick = ()=>close(false);
+    overlay.classList.add('show');
+    document.addEventListener('keydown', onKey);
+    setTimeout(()=> okBtn.focus(), 0);
+  });
+}
 
 /* ===== Send ===== */
 async function sendPayload(){
