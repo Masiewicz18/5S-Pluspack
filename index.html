@@ -83,21 +83,6 @@
   .sex{color:#6b7280;font-size:13px;margin-top:6px}
   .total{margin-top:12px;border:1px solid var(--line);background:#f1f7ff;border-radius:10px;padding:10px;text-align:center;font-weight:800}
 
-  /* Observationer */
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-  th{font-size:13px;color:var(--muted);background:#f7fbff}
-  tbody tr:hover{background:#f3f7ff}
-  .chip5{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#f6faff;font-weight:700}
-  .editable{background:#fff8e1}
-  .footer{display:flex;gap:10px;justify-content:flex-end;padding:14px;border-top:1px solid var(--line);background:#fff}
-
-  /* Kort: zoom-effekt */
-  .zoom-container{overflow:hidden;border:1px solid var(--line);border-radius:12px}
-  .zoom-img{transition:transform .3s ease;max-width:100%;height:auto;display:block}
-  .zoom-container:hover .zoom-img,
-  .zoom-container:active .zoom-img{transform:scale(1.5);cursor:zoom-in}
-
   /* Bekræftelses-modal */
   .modalOverlay{position:fixed;inset:0;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
   .modalOverlay.show{display:flex}
@@ -173,6 +158,10 @@
         <!-- Højre -->
         <aside class="card scoreCard">
           <h3>Score-overblik</h3>
+
+          <!-- Radar-graf -->
+          <canvas id="radar" width="360" height="300" style="width:100%;max-width:460px;height:auto;display:block;margin:0 auto 12px auto;border:1px solid var(--line);border-radius:12px;background:#fff"></canvas>
+
           <div id="scoreList" class="scoreList"></div>
           <div id="totalBox" class="total">Total: 0/25 (0%)</div>
 
@@ -190,21 +179,17 @@
       </div>
     </div>
 
-    <!-- KORT-PANEL -->
+    <!-- KORT-PANEL (zoom fjernet) -->
     <div id="mapPanel" class="tab-panel" style="display:none;">
       <div class="grid">
         <div class="card" style="grid-column:1 / -1;">
           <h3>5S Walk – Kort</h3>
 
-          <!-- Første billede -->
-          <div class="zoom-container">
-            <img src="./TEST.PNG" alt="5S Walk kort" class="zoom-img">
-          </div>
+          <img src="./TEST.PNG" alt="5S Walk kort"
+               style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block">
 
-          <!-- Ekstra billede -->
-          <div class="zoom-container" style="margin-top:16px;">
-            <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare" class="zoom-img">
-          </div>
+          <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare"
+               style="max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;margin-top:16px;display:block">
 
           <p style="color:var(--muted);margin-top:8px">
             Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
@@ -297,7 +282,7 @@ const S5=[
 ];
 const SCORES=Object.fromEntries(S5.map(s=>[s.key,0]));
 let OBS=[];
-const SKEY='pluspack.5s.audit.v14';   // nuværende nøgle
+const SKEY='pluspack.5s.audit.v14';
 let IS_RESTORING = false;
 
 /* ===== MIGRATION fra v12/v13 ===== */
@@ -358,6 +343,10 @@ window.addEventListener('DOMContentLoaded',()=>{
         window.scrollTo({top:0,behavior:'smooth'});
       });
     });
+
+    // første tegning af radar og responsiv redraw
+    drawRadar();
+    window.addEventListener('resize', drawRadar);
   }catch(err){ console.error('Init fejl:',err); $('#statusTxt').textContent='Init-fejl'; }
 });
 
@@ -431,6 +420,121 @@ function buildScoreList(){
   });
 }
 
+/* ===== Radar-graf ===== */
+function drawRadar(){
+  const canvas = document.getElementById('radar');
+  if(!canvas) return;
+
+  // responsiv skalering
+  const parentW = canvas.parentElement.clientWidth;
+  const cssW = Math.min(500, Math.max(260, parentW-32));
+  const cssH = Math.round(cssW * 0.75);
+
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = cssW+'px';
+  canvas.style.height = cssH+'px';
+  canvas.width  = Math.floor(cssW*dpr);
+  canvas.height = Math.floor(cssH*dpr);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0); // så vi kan tegne i CSS-px
+
+  // setup
+  const w = cssW, h = cssH;
+  ctx.clearRect(0,0,w,h);
+  const cx = w/2, cy = h/2 + 10;
+  const radius = Math.min(w,h)/2 - 28;
+  const axes = S5.map(s=>s.name);
+  const maxVal = 5;
+
+  // baggrund skalaer (koncentriske polygoner)
+  const levels = 5;
+  ctx.lineWidth = 1;
+  for(let l=1; l<=levels; l++){
+    const r = radius * (l/levels);
+    ctx.beginPath();
+    axes.forEach((_,i)=>{
+      const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
+      const x = cx + r*Math.cos(ang);
+      const y = cy + r*Math.sin(ang);
+      (i===0)?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.strokeStyle = '#e6edf7';
+    ctx.stroke();
+  }
+
+  // akser + labels
+  ctx.font = '12px Segoe UI, Roboto, system-ui, sans-serif';
+  ctx.fillStyle = '#475569';
+  ctx.strokeStyle = '#e6edf7';
+  axes.forEach((label,i)=>{
+    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
+    const x = cx + radius*Math.cos(ang);
+    const y = cy + radius*Math.sin(ang);
+    // akse
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+    // label
+    const lx = cx + (radius+10)*Math.cos(ang);
+    const ly = cy + (radius+10)*Math.sin(ang);
+    ctx.textAlign = Math.cos(ang) > 0.1 ? 'left' : (Math.cos(ang) < -0.1 ? 'right' : 'center');
+    ctx.textBaseline = Math.sin(ang) > 0.1 ? 'top' : (Math.sin(ang) < -0.1 ? 'bottom' : 'middle');
+    ctx.fillText(label, lx, ly);
+  });
+
+  // data polygon
+  const vals = [SCORES.sort, SCORES.set, SCORES.shine, SCORES.std, SCORES.sus].map(v=>Number(v||0));
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const t = clamp(v,0,maxVal)/maxVal;
+    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
+    const x = cx + (radius*t)*Math.cos(ang);
+    const y = cy + (radius*t)*Math.sin(ang);
+    (i===0)?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  // fyld
+  const grd = ctx.createLinearGradient(0,cy-radius,0,cy+radius);
+  grd.addColorStop(0,'rgba(59,130,246,.18)');  // accent
+  grd.addColorStop(1,'rgba(6,182,212,.18)');   // accent2
+  ctx.fillStyle = grd;
+  ctx.fill();
+  // kant
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(59,130,246,.8)';
+  ctx.stroke();
+
+  // knudepunkter
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = 'rgba(59,130,246,.9)';
+  vals.forEach((v,i)=>{
+    const t = clamp(v,0,maxVal)/maxVal;
+    const ang = (-Math.PI/2) + i*(2*Math.PI/axes.length);
+    const x = cx + (radius*t)*Math.cos(ang);
+    const y = cy + (radius*t)*Math.sin(ang);
+    ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  });
+}
+
+/* ===== Events ===== */
+function bindEvents(){
+  S5.forEach(s=>{
+    $('#r-'+s.key)?.addEventListener('input',e=>setScore(s.key,+e.target.value),{passive:true});
+    document.querySelector(`[data-inc="${s.key}"]`)?.addEventListener('click',()=>setScore(s.key,clamp(SCORES[s.key]+1,0,5)));
+    document.querySelector(`[data-dec="${s.key}"]`)?.addEventListener('click',()=>setScore(s.key,clamp(SCORES[s.key]-1,0,5)));
+    document.querySelector(`[data-add="${s.key}"]`)?.addEventListener('click',()=>toggleForm(s.key,true));
+    document.querySelector(`[data-cancel="${s.key}"]`)?.addEventListener('click',()=>toggleForm(s.key,false));
+    $('#img-'+s.key)?.addEventListener('change',()=>previewThumbs(s.key));
+    document.querySelector(`[data-save="${s.key}"]`)?.addEventListener('click',()=>saveObservation(s.key));
+  });
+  $('#saveBtn')?.addEventListener('click',()=>{saveDraft(); toast('Kladde gemt');});
+  $('#clearBtn')?.addEventListener('click',()=>{ if(confirm('Ryd formular og observationer?')){ localStorage.removeItem(SKEY); location.reload(); } });
+  $('#sendBtn')?.addEventListener('click',async ()=>{
+    const ok = await showConfirmModal();
+    if(ok) sendPayload();
+  });
+}
+
 /* ===== Modal utils ===== */
 function showConfirmModal(){
   return new Promise(resolve=>{
@@ -457,25 +561,6 @@ function showConfirmModal(){
   });
 }
 
-/* ===== Events ===== */
-function bindEvents(){
-  S5.forEach(s=>{
-    $('#r-'+s.key)?.addEventListener('input',e=>setScore(s.key,+e.target.value),{passive:true});
-    document.querySelector(`[data-inc="${s.key}"]`)?.addEventListener('click',()=>setScore(s.key,clamp(SCORES[s.key]+1,0,5)));
-    document.querySelector(`[data-dec="${s.key}"]`)?.addEventListener('click',()=>setScore(s.key,clamp(SCORES[s.key]-1,0,5)));
-    document.querySelector(`[data-add="${s.key}"]`)?.addEventListener('click',()=>toggleForm(s.key,true));
-    document.querySelector(`[data-cancel="${s.key}"]`)?.addEventListener('click',()=>toggleForm(s.key,false));
-    $('#img-'+s.key)?.addEventListener('change',()=>previewThumbs(s.key));
-    document.querySelector(`[data-save="${s.key}"]`)?.addEventListener('click',()=>saveObservation(s.key));
-  });
-  $('#saveBtn')?.addEventListener('click',()=>{saveDraft(); toast('Kladde gemt');});
-  $('#clearBtn')?.addEventListener('click',()=>{ if(confirm('Ryd formular og observationer?')){ localStorage.removeItem(SKEY); location.reload(); } });
-  $('#sendBtn')?.addEventListener('click',async ()=>{
-    const ok = await showConfirmModal();
-    if(ok) sendPayload();
-  });
-}
-
 /* ===== Logik ===== */
 function setScore(key,val,{save=true}={}){
   SCORES[key]=val;
@@ -486,6 +571,7 @@ function setScore(key,val,{save=true}={}){
   $('#sb-'+key).style.width=(val*20)+'%';
   updateTotals();
   if(save && !IS_RESTORING) saveDraftSilent();
+  drawRadar(); // opdatér grafen
 }
 function previewThumbs(key){
   const c=$('#prev-'+key); if(!c) return; c.innerHTML='';
@@ -572,6 +658,7 @@ function restore(){
     Object.entries(d.scores||{}).forEach(([k,v])=> setScore(k, v, {save:false}));
 
     IS_RESTORING = false;
+    drawRadar();
   }catch(e){ console.warn('Kunne ikke gendanne kladde:', e); IS_RESTORING=false; }
 }
 function toggleForm(key,show){ const f=$('#f-'+key); if(f){ f.style.display=show?'block':'none'; if(show) $('#t-'+key)?.focus(); } }
