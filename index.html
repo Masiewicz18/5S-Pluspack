@@ -62,10 +62,7 @@
   .sblock{position:relative;border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;background:#fff}
   .sblock::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;border-radius:12px 0 0 12px;background:var(--col)}
   .srow{display:grid;grid-template-columns:180px 80px 1fr 170px;align-items:center;gap:12px}
-  @media (max-width:720px){
-    .srow{grid-template-columns:1fr;gap:10px}
-    .bubble{width:60px}
-  }
+  @media (max-width:720px){.srow{grid-template-columns:1fr;gap:10px}.bubble{width:60px}}
   .title{font-weight:800}
   .bubble{width:48px;height:40px;display:grid;place-items:center;font-weight:800;border:1px solid var(--line);border-radius:10px;background:#f7faff}
   .step{display:flex;align-items:center;gap:8px}
@@ -87,7 +84,7 @@
   .sex{color:#6b7280;font-size:13px;margin-top:6px}
   .total{margin-top:12px;border:1px solid var(--line);background:#f1f7ff;border-radius:10px;padding:10px;text-align:center;font-weight:800}
 
-  /* Kort-billeder (uden zoom) */
+  /* Kort-billeder (ingen zoom) */
   .map-img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
 
   /* Bekræftelses-modal */
@@ -101,23 +98,18 @@
   .modalBody strong{color:#b91c1c}
   .modalFoot{display:flex;gap:10px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:#fff}
 
-  /* SØGBAR DROPDOWN (“Hvor”) */
+  /* Søgbar dropdown (“Hvor”) */
   .custom-select{position:relative;display:flex;flex-direction:column}
-  .custom-select input{
-    padding:12px;border:1px solid var(--line);border-radius:12px;
-  }
+  .custom-select input{padding:12px;border:1px solid var(--line);border-radius:12px}
   .options{
     position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);
     border-top:none;border-radius:0 0 12px 12px;max-height:240px;overflow-y:auto;display:none;z-index:20;
-    box-shadow:0 8px 24px rgba(2,6,23,.08);
+    box-shadow:0 8px 24px rgba(2,6,23,.08)
   }
   .options.open{display:block}
   .options div{padding:10px 12px;cursor:pointer}
   .options div:hover{background:#f1f5f9}
-  /* bedre touch på mobil */
-  @media (hover:none){
-    .options div{padding:14px 12px}
-  }
+  @media (hover:none){.options div{padding:14px 12px}} /* bedre touch */
 </style>
 </head>
 <body>
@@ -183,10 +175,7 @@
         <!-- Højre -->
         <aside class="card scoreCard">
           <h3>Score-overblik</h3>
-
-          <!-- Radar-graf -->
           <canvas id="radar" style="width:100%;height:280px;"></canvas>
-
           <div id="scoreList" class="scoreList" style="margin-top:10px"></div>
           <div id="totalBox" class="total">Total: 0/25 (0%)</div>
 
@@ -209,10 +198,8 @@
       <div class="grid">
         <div class="card" style="grid-column:1 / -1;">
           <h3>5S Walk – Kort</h3>
-
           <img src="./TEST.PNG" alt="5S Walk kort" class="map-img">
           <img src="./Locationer råvare lagret.PNG" alt="Lokation råvare" class="map-img" style="margin-top:16px;">
-
           <p style="color:var(--muted);margin-top:8px">
             Følg ruten fra <strong>Start</strong> → <strong>Slut</strong>. Brug kortet som fast sekvens til dine 5S-observationer.
           </p>
@@ -247,7 +234,7 @@
 <script>
 'use strict';
 
-/* ===== Power Automate endpoints (dine) ===== */
+/* ===== Power Automate endpoints ===== */
 const ENDPOINT_AUDIT = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/c125172796c54698b8f2846f97ff4e0e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=pSjeXn9i7gLQ0cQZuHVsRV6R5iJdqe2v9_VnjhAjfoc";
 const ENDPOINT_OBS   = "https://default430cd76f558540b4b6d4f372acf579.16.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/02058f832d784053acb059c0124e3e40/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8GsT2zUZm5FRT6gpsfIKsFw4po8uY53HwaCDhlscahc";
 
@@ -261,7 +248,7 @@ const short=(s)=> (s||'').trim().replace(/\s+/g,' ').slice(0,220)+((s||'').lengt
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function toast(t){ $('#statusTxt').textContent=t; setTimeout(updateTotals,1500); }
 
-/* ===== Komprimering af billeder ===== */
+/* ===== Billed-komprimering ===== */
 function canvasToJpeg(img, maxSidePx, quality){
   const scale = Math.min(1, maxSidePx / Math.max(img.width, img.height));
   const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
@@ -269,9 +256,7 @@ function canvasToJpeg(img, maxSidePx, quality){
   const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
   return c.toDataURL('image/jpeg', quality);
 }
-async function compressToTargetKB(file, {
-  startMaxSide=1600, startQuality=0.75, minQuality=0.5, minSide=1024, targetKB=350
-} = {}){
+async function compressToTargetKB(file, {startMaxSide=1600, startQuality=0.75, minQuality=0.5, minSide=1024, targetKB=350} = {}){
   const dataUrl = await new Promise((res, rej) => {
     const fr = new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file);
   });
@@ -294,7 +279,7 @@ async function getUpToNCompressed(files, maxN=5, targetKB=350){
   return out;
 }
 
-/* ===== Data (danske labels) ===== */
+/* ===== Data ===== */
 const S5=[
   {key:'sort',  name:'Sortér',       color:getCSS('--c-sort'), tip:'Fjern overflødige ting. Kun det nødvendige i arbejdsområdet.'},
   {key:'set',   name:'Systematisér', color:getCSS('--c-set'),  tip:'Alt har en fast plads, tydelig mærkning og let adgang.'},
@@ -307,49 +292,14 @@ let OBS=[];
 const SKEY='pluspack.5s.audit.v15';
 let IS_RESTORING=false;
 
-/* ===== Lokationsliste (til søgbar dropdown) ===== */
+/* ===== Lokationer til søgbar dropdown ===== */
 const LOCATIONS = [
   "Port Alu RV","Port Alu-Plast RV","Port Plast RV","Port ved modtagelsen",
   "Gang N RV","Gang M RV","Gang KL RV","Gang U RV","Gang GH RV",
   "Gang EF RV","Gang CD RV","Gang AB RV","Udpak RV","Dock RV"
 ];
 
-/* ===== Init ===== */
-window.addEventListener('DOMContentLoaded',()=>{
-  try{
-    $('#date').value=today();
-    $('#printBtn').addEventListener('click',()=>window.print(),{passive:true});
-    buildBlocks(); buildScoreList(); bindEvents();
-    restore();
-    updateTotals();
-    $('#statusTxt').textContent='Klar';
-
-    // Tab-skift
-    $$('.tab').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        $$('.tab').forEach(t=>t.classList.remove('active'));
-        btn.classList.add('active');
-        const tab=btn.dataset.tab;
-        $('#auditPanel').style.display = tab==='audit' ? 'block' : 'none';
-        $('#mapPanel').style.display   = tab==='map'   ? 'block' : 'none';
-        window.scrollTo({top:0,behavior:'smooth'});
-      });
-    });
-
-    // Radar first draw + on resize
-    window.addEventListener('resize', renderRadar, {passive:true});
-    renderRadar();
-
-    // Luk dropdowns ved klik udenfor
-    document.addEventListener('click', (e)=>{
-      if(!e.target.closest('.custom-select')){
-        closeAllOptions();
-      }
-    });
-  }catch(err){ console.error('Init fejl:',err); $('#statusTxt').textContent='Init-fejl'; }
-});
-
-/* ===== UI byggere ===== */
+/* ===== Build UI ===== */
 function buildBlocks(){
   const root=$('#blocks');
   S5.forEach(s=>{
@@ -431,7 +381,6 @@ function openOptions(input){
   const box = input.nextElementSibling;
   if(box && box.classList.contains('options')){
     box.classList.add('open');
-    // klik på valgmulighed
     box.querySelectorAll('div').forEach(d=>{
       d.onclick = ()=>{
         input.value = d.textContent;
@@ -440,81 +389,98 @@ function openOptions(input){
     });
   }
 }
-function closeAllOptions(){
-  $$('.options.open').forEach(b=>b.classList.remove('open'));
-}
+function closeAllOptions(){ $$('.options.open').forEach(b=>b.classList.remove('open')); }
 function filterOptions(input){
   const box = input.nextElementSibling;
   if(!box) return;
   const term = input.value.toLowerCase();
   Array.from(box.children).forEach(opt=>{
-    const show = opt.textContent.toLowerCase().includes(term);
-    opt.style.display = show ? 'block':'none';
+    opt.style.display = opt.textContent.toLowerCase().includes(term) ? 'block':'none';
   });
   if(!box.classList.contains('open')) box.classList.add('open');
 }
 
-/* ===== Radar chart ===== */
-function renderRadar(){
-  const canvas = $('#radar'); if(!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  const bbox = canvas.getBoundingClientRect();
-  canvas.width = Math.floor((bbox.width||360) * dpr);
-  canvas.height = Math.floor((bbox.height||280) * dpr);
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr);
-  const W = bbox.width || 360, H = bbox.height || 280;
-  ctx.clearRect(0,0,W,H);
+/* ===== Radar-graf (robust) ===== */
+function renderRadar() {
+  try {
+    const canvas = document.getElementById('radar');
+    if (!canvas) return;
 
-  const cx = W/2, cy = H/2 + 10;
-  const radius = Math.min(W, H) * 0.38;
-  const axes = S5.length, maxVal = 5;
+    // Vent til layout er sat første gang
+    if (!renderRadar._laidOutOnce) {
+      renderRadar._laidOutOnce = true;
+      return requestAnimationFrame(renderRadar);
+    }
 
-  // grid
-  ctx.strokeStyle = '#e5eaf0';
-  ctx.lineWidth = 1;
-  for(let r=1;r<=5;r++){
-    ctx.beginPath();
+    const dpr = window.devicePixelRatio || 1;
+    const parent = canvas.parentElement || canvas;
+    const parentW = Math.max(parent.clientWidth || 0, 280);
+    const parentH = Math.max(parseInt((canvas.style.height || '280').replace('px',''), 10) || 280, 220);
+
+    canvas.width  = Math.floor(parentW * dpr);
+    canvas.height = Math.floor(parentH * dpr);
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr);
+    const W = parentW, H = parentH;
+
+    ctx.clearRect(0,0,W,H);
+
+    const labels = ['Sortér','Systematisér','Rengøring','Standardisér','Fasthold'];
+    const getStyle = (v)=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+    const cx = W/2, cy = H/2 + 10;
+    const radius = Math.min(W, H) * 0.38;
+    const axes = labels.length, maxVal = 5;
+
+    // grid
+    ctx.strokeStyle = '#e5eaf0';
+    ctx.lineWidth = 1;
+    for(let r=1;r<=5;r++){
+      ctx.beginPath();
+      for(let i=0;i<axes;i++){
+        const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+        const x=cx+Math.cos(a)*radius*(r/5);
+        const y=cy+Math.sin(a)*radius*(r/5);
+        i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+    // axes + labels
+    ctx.font='12px Segoe UI,system-ui';
+    ctx.fillStyle='#334155';
     for(let i=0;i<axes;i++){
       const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-      const x=cx+Math.cos(a)*radius*(r/5);
-      const y=cy+Math.sin(a)*radius*(r/5);
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      const x=cx+Math.cos(a)*radius, y=cy+Math.sin(a)*radius;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+      const lx=cx+Math.cos(a)*(radius+14), ly=cy+Math.sin(a)*(radius+14);
+      ctx.textAlign=Math.abs(Math.cos(a))<0.3?'center':(Math.cos(a)>0?'left':'right');
+      ctx.textBaseline=Math.abs(Math.sin(a))<0.3?'middle':(Math.sin(a)>0?'top':'bottom');
+      ctx.fillText(labels[i],lx,ly);
     }
-    ctx.closePath(); ctx.stroke();
-  }
-  // axes + labels
-  ctx.font='12px Segoe UI,system-ui';
-  ctx.fillStyle='#334155';
-  for(let i=0;i<axes;i++){
-    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-    const x=cx+Math.cos(a)*radius, y=cy+Math.sin(a)*radius;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-    const lx=cx+Math.cos(a)*(radius+14), ly=cy+Math.sin(a)*(radius+14);
-    ctx.textAlign=Math.abs(Math.cos(a))<0.3?'center':(Math.cos(a)>0?'left':'right');
-    ctx.textBaseline=Math.abs(Math.sin(a))<0.3?'middle':(Math.sin(a)>0?'top':'bottom');
-    ctx.fillText(S5[i].name,lx,ly);
-  }
-  // data
-  const vals=S5.map(s=>+SCORES[s.key]||0);
-  ctx.beginPath();
-  vals.forEach((v,i)=>{
-    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-    const r=radius*(v/maxVal);
-    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-  });
-  ctx.closePath();
-  ctx.fillStyle='rgba(59,130,246,0.2)'; ctx.fill();
-  ctx.strokeStyle=getCSS('--accent'); ctx.lineWidth=2; ctx.stroke();
+    // data
+    const vals = ['sort','set','shine','std','sus'].map(k=>+SCORES[k]||0);
+    ctx.beginPath();
+    vals.forEach((v,i)=>{
+      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+      const r=radius*(v/maxVal);
+      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle='rgba(59,130,246,0.2)'; ctx.fill();
+    ctx.strokeStyle=getStyle('--accent'); ctx.lineWidth=2; ctx.stroke();
 
-  ctx.fillStyle='#fff'; ctx.strokeStyle=getCSS('--accent');
-  vals.forEach((v,i)=>{
-    const a=(-Math.PI/2)+(i*2*Math.PI/axes);
-    const r=radius*(v/maxVal);
-    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
-    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  });
+    ctx.fillStyle='#fff'; ctx.strokeStyle=getStyle('--accent');
+    vals.forEach((v,i)=>{
+      const a=(-Math.PI/2)+(i*2*Math.PI/axes);
+      const r=radius*(v/maxVal);
+      const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r;
+      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+  } catch (e) {
+    console.error('Radar fejl:', e);
+  }
 }
 
 /* ===== Events ===== */
@@ -528,7 +494,6 @@ function bindEvents(){
     $('#img-'+s.key)?.addEventListener('change',()=>previewThumbs(s.key));
     document.querySelector(`[data-save="${s.key}"]`)?.addEventListener('click',()=>saveObservation(s.key));
 
-    // Aktivér touch-venlig dropdown for “Hvor”
     const locInput = $('#loc-'+s.key);
     if(locInput){
       locInput.addEventListener('focus', ()=>openOptions(locInput));
@@ -538,12 +503,7 @@ function bindEvents(){
   });
   $('#saveBtn')?.addEventListener('click',()=>{saveDraft(); toast('Kladde gemt');});
   $('#clearBtn')?.addEventListener('click',()=>{ if(confirm('Ryd formular og observationer?')){ localStorage.removeItem(SKEY); location.reload(); } });
-
-  // Bekræftelses-modal
-  $('#sendBtn')?.addEventListener('click',async ()=>{
-    const ok = await showConfirmModal();
-    if(ok) sendPayload();
-  });
+  $('#sendBtn')?.addEventListener('click',async ()=>{ const ok=await showConfirmModal(); if(ok) sendPayload(); });
 }
 
 /* ===== Modal utils ===== */
@@ -563,7 +523,6 @@ function showConfirmModal(){
       if(e.key==='Escape') close(false);
       if(e.key==='Enter') close(true);
     }
-
     okBtn.onclick = ()=>close(true);
     cancelBtn.onclick = ()=>close(false);
     overlay.classList.add('show');
@@ -627,7 +586,7 @@ function renderObs(){
   if(!OBS.length){
     body.innerHTML='<tr><td colspan="4" style="text-align:center;color:#65758b;padding:16px">Ingen observationer endnu.</td></tr>'; return;
   }
-  OBS.forEach((o,i)=>{
+  OBS.forEach((o)=>{
     const tr=document.createElement('tr');
     const chip=`<span class="chip5" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#f6faff;font-weight:700;border-color:${o.color}"><span style="width:10px;height:10px;border-radius:999px;background:${o.color}"></span>${o.name}</span>`;
     const meta = `<div class="mini" style="margin-top:4px">${o.where ? `📍 ${escapeHTML(o.where)} · ` : ''}👤 ${escapeHTML(o.resp||'')}</div>`;
@@ -679,7 +638,6 @@ function toggleForm(key,show){
   f.style.display=show?'block':'none';
   if(show){
     $('#t-'+key)?.focus();
-    // Åbn lokationsliste når feltet får fokus
     const loc=$('#loc-'+key);
     if(loc){ openOptions(loc); }
   }else{
@@ -766,6 +724,36 @@ async function sendPayload(){
     alert(e.message||e);
   }
 }
+
+/* ===== Init (robust) ===== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  try { $('#date').value = today(); } catch(e){}
+  try { $('#printBtn').addEventListener('click',()=>window.print(),{passive:true}); } catch(e){}
+
+  try { buildBlocks(); } catch(e){ console.error(e); }
+  try { buildScoreList(); } catch(e){ console.error(e); }
+  try { bindEvents(); } catch(e){ console.error(e); }
+  try { restore(); } catch(e){ console.error(e); }
+  try { updateTotals(); } catch(e){ console.error(e); }
+
+  // Tabs
+  $$('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('.tab').forEach(t=>t.classList.remove('active'));
+      btn.classList.add('active');
+      const tab=btn.dataset.tab;
+      $('#auditPanel').style.display = tab==='audit' ? 'block' : 'none';
+      $('#mapPanel').style.display   = tab==='map'   ? 'block' : 'none';
+      window.scrollTo({top:0,behavior:'smooth'});
+      if(tab==='audit') requestAnimationFrame(renderRadar);
+    });
+  });
+
+  requestAnimationFrame(renderRadar);
+  window.addEventListener('resize', ()=>requestAnimationFrame(renderRadar), {passive:true});
+
+  const stxt = $('#statusTxt'); if (stxt) stxt.textContent = 'Klar';
+});
 
 /* ===== Advarsel ved luk/opdater ===== */
 window.addEventListener('beforeunload', function (e) {
